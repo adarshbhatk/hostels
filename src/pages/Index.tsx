@@ -197,7 +197,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Testimonials Section */}
+      {/* How It Works Section - Replace Testimonials Section */}
       <section className="py-16 lg:py-24 px-6 bg-gradient-to-b from-background to-hostel-50/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -206,35 +206,61 @@ const Index = () => {
               size="md"
               className="mb-4 mx-auto"
             >
-              Testimonials
+              How It Works
             </Badge>
             <h2 className="text-3xl lg:text-4xl font-bold">
-              What students are saying
+              Find your hostel in 3 easy steps
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Hear from students who have found their perfect hostel through Hostelwise
+              We've simplified the process of finding the perfect hostel for your college years
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <AnimatedCard 
-                key={index}
-                animation="fade-up"
-                delay={200 * (index + 1)}
-                className="p-6"
-                hoverEffect="lift"
-              >
-                <div className="mb-4 text-xl text-hostel-700">"</div>
-                <p className="text-muted-foreground mb-6">
-                  {testimonial.quote}
-                </p>
-                <div className="mt-auto">
-                  <p className="font-semibold">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                </div>
-              </AnimatedCard>
-            ))}
+            <AnimatedCard 
+              animation="fade-up"
+              delay={200}
+              className="p-6 text-center"
+              hoverEffect="lift"
+            >
+              <div className="h-12 w-12 rounded-full bg-hostel-100 flex items-center justify-center mb-4 mx-auto">
+                <Search className="h-6 w-6 text-hostel-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">1. Browse Colleges</h3>
+              <p className="text-muted-foreground">
+                Select your college from our comprehensive list of institutions
+              </p>
+            </AnimatedCard>
+
+            <AnimatedCard 
+              animation="fade-up"
+              delay={400}
+              className="p-6 text-center"
+              hoverEffect="lift"
+            >
+              <div className="h-12 w-12 rounded-full bg-hostel-100 flex items-center justify-center mb-4 mx-auto">
+                <Building className="h-6 w-6 text-hostel-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">2. Find Hostels</h3>
+              <p className="text-muted-foreground">
+                View detailed information about each hostel and compare your options
+              </p>
+            </AnimatedCard>
+
+            <AnimatedCard 
+              animation="fade-up"
+              delay={600}
+              className="p-6 text-center"
+              hoverEffect="lift"
+            >
+              <div className="h-12 w-12 rounded-full bg-hostel-100 flex items-center justify-center mb-4 mx-auto">
+                <Star className="h-6 w-6 text-hostel-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">3. Make Your Choice</h3>
+              <p className="text-muted-foreground">
+                Make an informed decision based on comprehensive hostel information
+              </p>
+            </AnimatedCard>
           </div>
         </div>
       </section>
