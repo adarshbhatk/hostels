@@ -1,13 +1,9 @@
-
 import { Link } from 'react-router-dom';
 import { ArrowRight, Github, Twitter, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
-  return (
-    <footer className="bg-background border-t border-border mt-auto">
+  return <footer className="bg-background border-t border-border mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="space-y-4 md:col-span-2">
@@ -22,18 +18,10 @@ const Footer = () => {
             </p>
             
             <div className="flex space-x-4 pt-4">
-              <a 
-                href="#" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Twitter"
-              >
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Twitter">
                 <Twitter size={18} />
               </a>
-              <a 
-                href="#" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="GitHub"
-              >
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
                 <Github size={18} />
               </a>
             </div>
@@ -44,16 +32,7 @@ const Footer = () => {
               Explore
             </h4>
             <ul className="space-y-3">
-              {['Home', 'About', 'Colleges', 'FAQs'].map(item => (
-                <li key={item}>
-                  <Link 
-                    to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                    className="text-muted-foreground hover:text-hostel-600 transition-colors text-sm"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              {['Home', 'About', 'Colleges', 'FAQs'].map(item => {})}
             </ul>
           </div>
           
@@ -62,25 +41,15 @@ const Footer = () => {
               Legal
             </h4>
             <ul className="space-y-3">
-              {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map(item => (
-                <li key={item}>
-                  <Link 
-                    to="#"
-                    className="text-muted-foreground hover:text-hostel-600 transition-colors text-sm"
-                  >
+              {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map(item => <li key={item}>
+                  <Link to="#" className="text-muted-foreground hover:text-hostel-600 transition-colors text-sm">
                     {item}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
             
             <div className="pt-4">
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="w-full flex items-center justify-between"
-              >
+              <Button asChild variant="outline" size="sm" className="w-full flex items-center justify-between">
                 <Link to="/auth?tab=signup">
                   <span>Join the community</span>
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -99,8 +68,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
