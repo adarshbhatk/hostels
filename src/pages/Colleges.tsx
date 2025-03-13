@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -85,8 +86,11 @@ const Colleges = () => {
                   <Button 
                     variant="outline" 
                     className="w-full text-hostel-600 border-hostel-600 hover:bg-hostel-50"
+                    asChild
                   >
-                    View Hostels
+                    <Link to={`/colleges/${college.id}`}>
+                      View Hostels
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>
