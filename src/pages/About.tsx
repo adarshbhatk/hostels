@@ -1,4 +1,3 @@
-
 import { Building, Star, Search, Shield, Users, Clock } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -38,7 +37,7 @@ const About = () => {
     {
       icon: <Clock className="h-6 w-6 text-hostel-600" />,
       title: 'Relevance',
-      description: 'We ensure all information is current and relevant to today's students and their needs.'
+      description: "We ensure all information is current and relevant to today's students and their needs."
     },
   ];
   
