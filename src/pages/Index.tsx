@@ -54,23 +54,6 @@ const Index = () => {
     { value: '10,000+', label: 'Students Helped' },
   ];
   
-  const testimonials = [
-    {
-      quote: "Hostelwise helped me find the perfect hostel that fit my budget and preferences. The reviews were honest and accurate.",
-      author: "Priya S.",
-      role: "First Year Student, Delhi University"
-    },
-    {
-      quote: "As someone moving to a new city, I was worried about accommodation. The detailed hostel profiles gave me all the information I needed.",
-      author: "Rahul K.",
-      role: "Computer Science, IIT Bombay"
-    },
-    {
-      quote: "I wish this platform existed when I started college! Now I contribute reviews to help juniors make informed decisions.",
-      author: "Ananya P.",
-      role: "Final Year Student, Manipal University"
-    },
-  ];
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -124,6 +107,32 @@ const Index = () => {
                 Write a Review
               </Link>
             </Button>
+          </div>
+
+          <div className={`mt-8 text-sm text-muted-foreground animate-fade-up ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <span className="font-medium">Top colleges:</span>{' '}
+            <span className="space-x-2">
+              <Link 
+                to="/colleges/2" 
+                className="hover:text-hostel-600 transition-colors"
+              >
+                IIT Bombay
+              </Link>
+              {' | '}
+              <Link 
+                to="/colleges/7" 
+                className="hover:text-hostel-600 transition-colors"
+              >
+                BITS Pilani
+              </Link>
+              {' | '}
+              <Link 
+                to="/colleges/8" 
+                className="hover:text-hostel-600 transition-colors"
+              >
+                Christ University
+              </Link>
+            </span>
           </div>
         </div>
       </section>
