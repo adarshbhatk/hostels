@@ -8,18 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-
-// Mock data for Phase 1
-const mockColleges = [
-  { id: 1, name: 'Delhi University', location: 'New Delhi', hostelCount: 12 },
-  { id: 2, name: 'IIT Bombay', location: 'Mumbai', hostelCount: 8 },
-  { id: 3, name: 'Manipal University', location: 'Manipal', hostelCount: 10 },
-  { id: 4, name: 'Jawaharlal Nehru University', location: 'New Delhi', hostelCount: 15 },
-  { id: 5, name: 'VIT University', location: 'Vellore', hostelCount: 14 },
-  { id: 6, name: 'Banaras Hindu University', location: 'Varanasi', hostelCount: 7 },
-  { id: 7, name: 'BITS Pilani', location: 'Pilani', hostelCount: 9 },
-  { id: 8, name: 'Christ University', location: 'Bangalore', hostelCount: 6 },
-];
+import { mockColleges } from '@/data/mockData';
 
 const Colleges = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,7 +26,7 @@ const Colleges = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <Badge
-              variant="primary"
+              variant="default"
               size="md"
               className="mb-4 mx-auto"
             >
