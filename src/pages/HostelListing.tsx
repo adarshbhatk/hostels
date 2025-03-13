@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Users, Star, ArrowLeft, Building } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -300,8 +299,11 @@ const HostelListing = () => {
                 <CardFooter>
                   <Button 
                     className="w-full bg-hostel-600 hover:bg-hostel-700 text-white"
+                    asChild
                   >
-                    View Details
+                    <Link to={`/colleges/${collegeId}/hostel/${hostel.id}`}>
+                      View Details
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>
