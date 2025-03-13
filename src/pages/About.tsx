@@ -2,7 +2,7 @@ import { Building, Star, Search, Shield, Users, Clock } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AnimatedCard from '@/components/ui/AnimatedCard';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 
 const About = () => {
   const mission = [
@@ -68,7 +68,7 @@ const About = () => {
         <section className="py-16 px-6">
           <div className="max-w-7xl mx-auto text-center">
             <Badge 
-              variant="primary" 
+              variant="default" 
               size="md"
               className="mb-6 mx-auto"
             >
@@ -93,7 +93,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <Badge 
-                variant="primary" 
+                variant="default" 
                 size="md"
                 className="mb-4 mx-auto"
               >
@@ -132,7 +132,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <Badge 
-                variant="primary" 
+                variant="default" 
                 size="md"
                 className="mb-4 mx-auto"
               >
@@ -171,7 +171,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <Badge 
-                variant="primary" 
+                variant="default" 
                 size="md"
                 className="mb-4 mx-auto"
               >

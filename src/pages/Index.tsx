@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Star, Building, Users, BarChart4, Shield, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AnimatedCard from '@/components/ui/AnimatedCard';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 

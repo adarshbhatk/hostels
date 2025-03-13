@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';

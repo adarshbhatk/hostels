@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Users, Star, ArrowLeft, Building } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -169,7 +169,7 @@ const HostelListing = () => {
           
           <div className="mb-12">
             <Badge
-              variant="primary"
+              variant="default"
               size="md"
               className="mb-4"
             >
@@ -250,7 +250,7 @@ const HostelListing = () => {
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl">{hostel.name}</CardTitle>
                     <Badge 
-                      variant={hostel.type === 'Boys' ? 'primary' : hostel.type === 'Girls' ? 'success' : 'warning'}
+                      variant={hostel.type === 'Boys' ? 'default' : hostel.type === 'Girls' ? 'secondary' : 'outline'}
                       size="sm"
                     >
                       {hostel.type}

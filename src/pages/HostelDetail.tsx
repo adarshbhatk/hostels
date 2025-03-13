@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -18,7 +17,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -613,7 +612,7 @@ const HostelDetail = () => {
             <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
               <div>
                 <Badge
-                  variant="primary"
+                  variant="default"
                   size="md"
                   className="mb-2"
                 >
@@ -711,173 +710,4 @@ const HostelDetail = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-                
-                {/* Warden Info Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Warden Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h3 className="font-medium mb-2">Name</h3>
-                      <div className="flex items-start">
-                        <Building className="h-4 w-4 mr-2 mt-1 text-hostel-600" />
-                        <span>{hostel.warden.name}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Contact</h3>
-                      <div className="flex items-start mb-2">
-                        <Phone className="h-4 w-4 mr-2 mt-1 text-hostel-600" />
-                        <span>{hostel.warden.phone}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <Mail className="h-4 w-4 mr-2 mt-1 text-hostel-600" />
-                        <span>{hostel.warden.email}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Amenities Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl">Amenities</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {hostel.amenities.map((amenity, index) => (
-                      <Badge key={index} variant="secondary" className="px-3 py-1">
-                        {amenity}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Description Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl">About {hostel.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    {hostel.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Reviews Tab Content */}
-            <TabsContent value="reviews" className="space-y-8">
-              {/* Search and Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="col-span-1 md:col-span-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      placeholder="Search reviews..."
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger>
-                      <div className="flex items-center">
-                        <Filter className="mr-2 h-4 w-4" />
-                        <span>Sort by</span>
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="date">
-                        <div className="flex items-center">
-                          <Calendar className="mr-2 h-4 w-4" />
-                          <span>Newest first</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="upvotes">
-                        <div className="flex items-center">
-                          <ThumbsUp className="mr-2 h-4 w-4" />
-                          <span>Most helpful</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              {/* Reviews List */}
-              <div className="space-y-6">
-                {sortedReviews.length === 0 ? (
-                  <div className="text-center py-10">
-                    <h3 className="text-lg font-medium mb-2">No reviews found</h3>
-                    <p className="text-muted-foreground">
-                      {searchTerm ? "Try a different search term" : "Be the first to leave a review"}
-                    </p>
-                  </div>
-                ) : (
-                  sortedReviews.map((review) => (
-                    <Card key={review.id}>
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-lg">{review.user}</h3>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
-                              <span>{new Date(review.date).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            {renderStars(review.rating)}
-                            {review.foodRating && (
-                              <div className="flex items-center justify-end text-sm mt-1">
-                                <Utensils className="h-3 w-3 mr-1" />
-                                <span className="text-muted-foreground">Food: {review.foodRating.toFixed(1)}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="mb-4">{review.content}</p>
-                        
-                        {review.photos && review.photos.length > 0 && (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-                            {review.photos.map((photo, index) => (
-                              <div key={index} className="relative aspect-video rounded-md overflow-hidden">
-                                <img 
-                                  src={photo} 
-                                  alt={`Review photo ${index + 1}`}
-                                  className="object-cover w-full h-full"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                      <CardFooter>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <ThumbsUp className="h-3 w-3 mr-1" />
-                          <span>{review.upvotes} people found this helpful</span>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  );
-};
-
-export default HostelDetail;
+                </Card
