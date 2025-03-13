@@ -1,45 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  MapPin, 
-  Users, 
-  Star, 
-  ArrowLeft, 
-  Building, 
-  Phone, 
-  Mail, 
-  Search, 
-  ThumbsUp, 
-  Calendar, 
-  Filter, 
-  Clock,
-  Utensils
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+// Import our new components
+import HostelHeader from '@/components/hostel/HostelHeader';
+import HostelDetails from '@/components/hostel/HostelDetails';
+import WardenInfo from '@/components/hostel/WardenInfo';
+import HostelAmenities from '@/components/hostel/HostelAmenities';
+import ReviewsSection from '@/components/hostel/ReviewsSection';
 
 // Mock data for hostels
 const mockHostels = [
@@ -510,8 +487,6 @@ const mockColleges = [
 const HostelDetail = () => {
   const { collegeId, hostelId } = useParams();
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('date');
   const [activeTab, setActiveTab] = useState('overview');
   
   // Find the college based on the ID from the URL
@@ -519,43 +494,6 @@ const HostelDetail = () => {
   
   // Find the hostel based on the ID from the URL
   const hostel = mockHostels.find(h => h.id === parseInt(hostelId || '0'));
-  
-  // Filtered reviews based on search term
-  const filteredReviews = hostel?.reviews.filter(review => 
-    review.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.user.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-  
-  // Sort reviews based on selected sort option
-  const sortedReviews = [...filteredReviews].sort((a, b) => {
-    if (sortBy === 'date') {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    } else if (sortBy === 'upvotes') {
-      return b.upvotes - a.upvotes;
-    }
-    return 0;
-  });
-
-  // Generate star rating display
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star 
-            key={star}
-            className={`h-4 w-4 ${
-              star <= rating 
-                ? 'text-yellow-500 fill-yellow-500' 
-                : star <= rating + 0.5 
-                  ? 'text-yellow-500 fill-yellow-500/50' 
-                  : 'text-gray-300'
-            }`}
-          />
-        ))}
-        <span className="ml-1 text-sm font-medium">{rating.toFixed(1)}</span>
-      </div>
-    );
-  };
   
   if (!college || !hostel) {
     return (
@@ -584,81 +522,8 @@ const HostelDetail = () => {
       
       <main className="flex-1 pt-24 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Breadcrumbs */}
-          <div className="flex items-center gap-2 mb-6 text-sm">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/colleges')}
-              className="pl-2 text-hostel-600 hover:bg-hostel-50"
-            >
-              Colleges
-            </Button>
-            <span className="text-muted-foreground">›</span>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate(`/colleges/${collegeId}`)}
-              className="text-hostel-600 hover:bg-hostel-50"
-            >
-              {college.name}
-            </Button>
-            <span className="text-muted-foreground">›</span>
-            <span className="text-muted-foreground">{hostel.name}</span>
-          </div>
-          
-          {/* Hostel Header */}
-          <div className="mb-8">
-            <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-              <div>
-                <Badge
-                  variant="default"
-                  size="md"
-                  className="mb-2"
-                >
-                  {hostel.type} Hostel
-                </Badge>
-                
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                  {hostel.name}
-                </h1>
-                
-                <div className="flex items-center text-muted-foreground mb-2">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>{hostel.location}</span>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  {renderStars(hostel.rating)}
-                  <span className="text-sm text-muted-foreground">
-                    ({hostel.reviews.length} reviews)
-                  </span>
-                </div>
-              </div>
-              
-              <Button 
-                className="bg-hostel-600 hover:bg-hostel-700 text-white"
-              >
-                Apply for Accommodation
-              </Button>
-            </div>
-            
-            {/* Image Gallery */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg overflow-hidden mb-8">
-              {hostel.photos.map((photo, index) => (
-                <div 
-                  key={index} 
-                  className={index === 0 ? "col-span-1 md:col-span-2 row-span-2" : ""}
-                >
-                  <img 
-                    src={photo}
-                    alt={`${hostel.name} - ${index + 1}`}
-                    className="w-full h-full object-cover min-h-[200px]"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Hostel Header with navigation and gallery */}
+          <HostelHeader hostel={hostel} college={college} />
           
           {/* Tabs */}
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mb-10">
@@ -671,43 +536,27 @@ const HostelDetail = () => {
             <TabsContent value="overview" className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Details Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Hostel Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h3 className="font-medium mb-2">Location</h3>
-                      <div className="flex items-start">
-                        <MapPin className="h-4 w-4 mr-2 mt-1 text-hostel-600" />
-                        <span>{hostel.location}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Type & Capacity</h3>
-                      <div className="flex items-start mb-2">
-                        <Users className="h-4 w-4 mr-2 mt-1 text-hostel-600" />
-                        <span>{hostel.type} Hostel - Capacity: {hostel.capacity} students</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Mess Food</h3>
-                      <div className="flex items-start">
-                        <Utensils className="h-4 w-4 mr-2 mt-1 text-hostel-600" />
-                        <span>{hostel.messFood === 'Veg' ? 'Vegetarian Only' : 
-                              hostel.messFood === 'Non-veg' ? 'Non-Vegetarian Available' : 
-                              'Both Vegetarian and Non-Vegetarian Options'}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Monthly Rent</h3>
-                      <div className="flex items-start">
-                        <span className="text-hostel-600 font-medium">{hostel.rent}</span>
-                        <span className="text-muted-foreground ml-1"> per month</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card
+                <HostelDetails hostel={hostel} />
+                
+                {/* Warden Info Card */}
+                <WardenInfo warden={hostel.warden} />
+                
+                {/* Amenities Card */}
+                <HostelAmenities amenities={hostel.amenities} description={hostel.description} />
+              </div>
+            </TabsContent>
+            
+            {/* Reviews Tab Content */}
+            <TabsContent value="reviews">
+              <ReviewsSection reviews={hostel.reviews} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default HostelDetail;
