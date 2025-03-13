@@ -1,5 +1,6 @@
 
 import { ReactNode } from 'react';
+import { Badge as ShadcnBadge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
 
 type BadgeVariant = 'default' | 'primary' | 'secondary' | 'outline' | 'success' | 'warning' | 'danger';
@@ -49,16 +50,15 @@ const Badge = ({
   };
 
   return (
-    <span
+    <ShadcnBadge
       className={cn(
-        'inline-flex items-center rounded-full border font-medium',
         getVariantClasses(),
         getSizeClasses(),
         className
       )}
     >
       {children}
-    </span>
+    </ShadcnBadge>
   );
 };
 

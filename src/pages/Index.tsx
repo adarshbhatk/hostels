@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Star, Building, Users, BarChart4, Shield, ArrowRight } from 'lucide-react';
@@ -84,14 +83,12 @@ const Index = () => {
             variant="primary" 
             size="md"
             className={`mb-6 mx-auto animate-fade-in ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transitionDelay: '200ms' }}
           >
             Find your perfect college hostel
           </Badge>
           
           <h1 
             className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight lg:leading-tight max-w-4xl mx-auto animate-fade-up ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transitionDelay: '400ms' }}
           >
             Honest hostel reviews from{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-hostel-700 to-hostel-500">
@@ -101,14 +98,12 @@ const Index = () => {
           
           <p 
             className={`mt-6 text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-up ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transitionDelay: '600ms' }}
           >
             Make informed decisions about your college accommodation with Hostelwise. Read honest reviews, see real photos, and get insights from students who've actually lived there.
           </p>
           
           <div 
             className={`mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transitionDelay: '800ms' }}
           >
             <Button 
               asChild
