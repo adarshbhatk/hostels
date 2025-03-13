@@ -43,19 +43,14 @@ const About = () => {
   
   const team = [
     {
-      name: 'Arjun Sharma',
+      name: 'Adarsh K',
       role: 'Founder & CEO',
-      bio: 'Former college student who experienced the challenges of finding good hostel accommodation firsthand.'
+      bio: 'Former college student who experienced the challenges of deciding between hostel and PG accommodation firsthand.'
     },
     {
-      name: 'Neha Patel',
-      role: 'Head of Community',
-      bio: 'Passionate about building communities and ensuring quality content moderation.'
-    },
-    {
-      name: 'Rohan Verma',
-      role: 'Tech Lead',
-      bio: 'Software engineer focused on creating intuitive user experiences and reliable platforms.'
+      name: 'Lovable AI',
+      role: 'Founding Engineer',
+      bio: 'Superhuman full stack engineer focused on creating intuitive user experiences and reliable platforms.'
     },
   ];
   
@@ -185,7 +180,7 @@ const About = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 justify-items-center max-w-4xl mx-auto">
               {team.map((member, index) => (
                 <AnimatedCard 
                   key={member.name}

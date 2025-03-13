@@ -44,7 +44,7 @@ const Footer = () => {
               Explore
             </h4>
             <ul className="space-y-3">
-              {['Home', 'About', 'Colleges', 'FAQs'].map(item => (
+              {['Home', 'About', 'Colleges'].map(item => (
                 <li key={item}>
                   <Link 
                     to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
@@ -65,7 +65,7 @@ const Footer = () => {
               {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map(item => (
                 <li key={item}>
                   <Link 
-                    to="#"
+                    to={`/${item.toLowerCase().replace(/\s+/g, '-')}`}
                     className="text-muted-foreground hover:text-hostel-600 transition-colors text-sm"
                   >
                     {item}
