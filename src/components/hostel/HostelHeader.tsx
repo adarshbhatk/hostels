@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Star, ArrowLeft } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
+
 interface HostelHeaderProps {
   hostel: {
     id: number;
@@ -18,6 +20,7 @@ interface HostelHeaderProps {
     name: string;
   };
 }
+
 const HostelHeader = ({
   hostel,
   college
@@ -82,4 +85,5 @@ const HostelHeader = ({
       </div>
     </>;
 };
+
 export default HostelHeader;
