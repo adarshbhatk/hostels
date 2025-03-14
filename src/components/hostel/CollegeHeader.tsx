@@ -4,16 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Building, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
-
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  hostelCount: number;
-}
+import type { College } from '@/types';
 
 interface CollegeHeaderProps {
-  college: College;
+  college: College & { hostelCount?: number };
 }
 
 const CollegeHeader = ({ college }: CollegeHeaderProps) => {
@@ -48,7 +42,7 @@ const CollegeHeader = ({ college }: CollegeHeaderProps) => {
         <span>{college.location}</span>
         <span className="mx-2">•</span>
         <Building className="h-4 w-4 mr-1" />
-        <span>{college.hostelCount} Hostels</span>
+        <span>{college.hostelCount || 0} Hostels</span>
       </div>
       
       <p className="text-muted-foreground max-w-3xl">

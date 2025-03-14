@@ -1,150 +1,435 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, ThumbsUp, Star, Clock, Utensils } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-
-interface Review {
-  id: number;
-  user: string;
-  rating: number;
-  date: string;
-  content: string;
-  foodRating: number;
-  upvotes: number;
-  photos: string[];
-}
+import { ThumbsUp, Star, MessageSquare, Calendar } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import type { Review } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReviewsSectionProps {
   reviews: Review[];
+  isLoading?: boolean;
+  hostelId: string;
 }
 
-const ReviewsSection = ({ reviews }: ReviewsSectionProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('date');
-  
-  // Filtered reviews based on search term
-  const filteredReviews = reviews.filter(review => 
-    review.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.user.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // Sort reviews based on selected sort option
-  const sortedReviews = [...filteredReviews].sort((a, b) => {
-    if (sortBy === 'date') {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    } else if (sortBy === 'upvotes') {
-      return b.upvotes - a.upvotes;
-    }
-    return 0;
+const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) => {
+  const { user, displayName } = useAuth();
+  const [activeTab, setActiveTab] = useState('all');
+  const [showAddReviewDialog, setShowAddReviewDialog] = useState(false);
+  const [newReview, setNewReview] = useState({
+    rating: 0,
+    foodRating: 0,
+    content: '',
   });
   
-  // Generate star rating display
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex items-center">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star 
-            key={star}
-            className={`h-4 w-4 ${
-              star <= rating 
-                ? 'text-yellow-500 fill-yellow-500' 
-                : star <= rating + 0.5 
-                  ? 'text-yellow-500 fill-yellow-500/50' 
-                  : 'text-gray-300'
-            }`}
-          />
-        ))}
-        <span className="ml-1 text-sm font-medium">{rating.toFixed(1)}</span>
-      </div>
-    );
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Filter reviews based on active tab
+  const filteredReviews = reviews.filter(review => {
+    switch (activeTab) {
+      case 'positive':
+        return review.rating >= 4;
+      case 'negative':
+        return review.rating <= 2;
+      default:
+        return true;
+    }
+  });
+
+  // Calculate average ratings
+  const avgRating = reviews.length > 0 
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) 
+    : 'N/A';
+  
+  const avgFoodRating = reviews.length > 0 
+    ? (reviews.reduce((sum, review) => sum + review.food_rating, 0) / reviews.length).toFixed(1) 
+    : 'N/A';
+    
+  // Function to render stars
+  const renderStars = (rating: number) => (
+    <div className="flex">
+      {[1, 2, 3, 4, 5].map(star => (
+        <Star 
+          key={star}
+          className={`h-4 w-4 ${star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+          onClick={() => setNewReview({...newReview, rating: star})}
+        />
+      ))}
+    </div>
+  );
+  
+  // Function to render food rating stars
+  const renderFoodStars = (rating: number) => (
+    <div className="flex">
+      {[1, 2, 3, 4, 5].map(star => (
+        <Star 
+          key={star}
+          className={`h-4 w-4 ${star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+          onClick={() => setNewReview({...newReview, foodRating: star})}
+        />
+      ))}
+    </div>
+  );
+  
+  // Add review mutation
+  const addReviewMutation = useMutation({
+    mutationFn: async (newReviewData: any) => {
+      if (!user) throw new Error('You must be logged in to add a review');
+      
+      const { data, error } = await supabase
+        .from('reviews')
+        .insert([
+          {
+            hostel_id: hostelId,
+            user_id: user.id,
+            rating: newReviewData.rating,
+            food_rating: newReviewData.foodRating,
+            content: newReviewData.content,
+            photos: [],
+            upvotes: 0
+          }
+        ])
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', hostelId] });
+      toast({
+        title: 'Review Added',
+        description: 'Your review has been added successfully.',
+      });
+      setShowAddReviewDialog(false);
+      setNewReview({ rating: 0, foodRating: 0, content: '' });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to add review: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Upvote mutation
+  const upvoteMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      if (!user) throw new Error('You must be logged in to upvote a review');
+      
+      const review = reviews.find(r => r.id === reviewId);
+      if (!review) throw new Error('Review not found');
+      
+      const { data, error } = await supabase
+        .from('reviews')
+        .update({ upvotes: review.upvotes + 1 })
+        .eq('id', reviewId)
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', hostelId] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to upvote review: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Handle review submission
+  const handleAddReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    addReviewMutation.mutate(newReview);
   };
   
+  if (isLoading) {
+    return <div className="space-y-4">
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-64 w-full" />
+    </div>;
+  }
+  
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="relative w-full md:w-auto flex-1 max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search reviews..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Sort by:</span>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date">Latest</SelectItem>
-              <SelectItem value="upvotes">Popular</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-6">
-        {sortedReviews.length > 0 ? (
-          sortedReviews.map((review) => (
-            <Card key={review.id}>
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <div className="font-medium mb-1">{review.user}</div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {review.date}
-                      </div>
-                      <div className="flex items-center">
-                        <Utensils className="h-3 w-3 mr-1" />
-                        Food: {renderStars(review.foodRating)}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl">Hostel Ratings</CardTitle>
+            {user && (
+              <Dialog open={showAddReviewDialog} onOpenChange={setShowAddReviewDialog}>
+                <DialogTrigger asChild>
+                  <Button className="bg-hostel-600 hover:bg-hostel-700 text-white">
+                    Add Review
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Add Your Review</DialogTitle>
+                    <DialogDescription>
+                      Share your experience at this hostel to help other students.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <form onSubmit={handleAddReview} className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Overall Rating</label>
+                      <div className="flex items-center space-x-1">
+                        {renderStars(newReview.rating)}
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          {newReview.rating > 0 ? `${newReview.rating}/5` : 'Select rating'}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  {renderStars(review.rating)}
-                </div>
-                
-                <p className="mb-4">{review.content}</p>
-                
-                {review.photos.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mb-4">
-                    {review.photos.map((photo, idx) => (
-                      <img 
-                        key={idx}
-                        src={photo} 
-                        alt={`Review photo ${idx + 1}`}
-                        className="rounded-md object-cover h-24"
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Food Rating</label>
+                      <div className="flex items-center space-x-1">
+                        {renderFoodStars(newReview.foodRating)}
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          {newReview.foodRating > 0 ? `${newReview.foodRating}/5` : 'Select rating'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Your Review</label>
+                      <textarea 
+                        className="w-full min-h-[100px] p-2 border rounded-md"
+                        placeholder="Share your experience..."
+                        value={newReview.content}
+                        onChange={(e) => setNewReview({...newReview, content: e.target.value})}
+                        required
                       />
-                    ))}
-                  </div>
-                )}
-                
-                <Separator className="my-4" />
-                
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <button className="flex items-center hover:text-foreground">
-                    <ThumbsUp className="h-4 w-4 mr-1" />
-                    <span>Helpful ({review.upvotes})</span>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">No reviews match your search.</p>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button 
+                        type="submit" 
+                        className="bg-hostel-600 hover:bg-hostel-700 text-white"
+                        disabled={newReview.rating === 0 || newReview.foodRating === 0 || !newReview.content || addReviewMutation.isPending}
+                      >
+                        {addReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
+              <h3 className="text-sm font-medium mb-2">Overall Rating</h3>
+              <div className="flex items-center mb-1">
+                <span className="text-3xl font-bold mr-2">{avgRating}</span>
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              </div>
+              <p className="text-sm text-muted-foreground">Based on {reviews.length} reviews</p>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
+              <h3 className="text-sm font-medium mb-2">Food Rating</h3>
+              <div className="flex items-center mb-1">
+                <span className="text-3xl font-bold mr-2">{avgFoodRating}</span>
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              </div>
+              <p className="text-sm text-muted-foreground">Mess food quality</p>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
+              <h3 className="text-sm font-medium mb-2">Review Count</h3>
+              <div className="flex items-center mb-1">
+                <span className="text-3xl font-bold mr-2">{reviews.length}</span>
+                <MessageSquare className="h-5 w-5 text-hostel-600" />
+              </div>
+              <p className="text-sm text-muted-foreground">Total reviews submitted</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Reviews ({reviews.length})</TabsTrigger>
+          <TabsTrigger value="positive">Positive ({reviews.filter(r => r.rating >= 4).length})</TabsTrigger>
+          <TabsTrigger value="negative">Negative ({reviews.filter(r => r.rating <= 2).length})</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all" className="space-y-4">
+          {filteredReviews.length > 0 ? (
+            filteredReviews.map((review) => (
+              <ReviewCard 
+                key={review.id} 
+                review={review}
+                onUpvote={() => upvoteMutation.mutate(review.id)}
+                isUpvoting={upvoteMutation.isPending}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No reviews available in this category.</p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="positive" className="space-y-4">
+          {filteredReviews.length > 0 ? (
+            filteredReviews.map((review) => (
+              <ReviewCard 
+                key={review.id} 
+                review={review}
+                onUpvote={() => upvoteMutation.mutate(review.id)}
+                isUpvoting={upvoteMutation.isPending}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No positive reviews available.</p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="negative" className="space-y-4">
+          {filteredReviews.length > 0 ? (
+            filteredReviews.map((review) => (
+              <ReviewCard 
+                key={review.id} 
+                review={review}
+                onUpvote={() => upvoteMutation.mutate(review.id)}
+                isUpvoting={upvoteMutation.isPending}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No negative reviews available.</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+interface ReviewCardProps {
+  review: Review;
+  onUpvote: () => void;
+  isUpvoting: boolean;
+}
+
+const ReviewCard = ({ review, onUpvote, isUpvoting }: ReviewCardProps) => {
+  const { user } = useAuth();
+  
+  // Format date
+  const formattedDate = review.created_at 
+    ? format(new Date(review.created_at), 'MMM d, yyyy')
+    : '';
+  
+  // Get display name
+  const displayName = review.user?.alias_name && review.user.use_alias_for_reviews 
+    ? review.user.alias_name
+    : review.user?.full_name || 'Anonymous';
+  
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="font-medium">{displayName}</h3>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5 mr-1" />
+              <span>{formattedDate}</span>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <div className="flex mr-4">
+              {[1, 2, 3, 4, 5].map(star => (
+                <Star 
+                  key={star}
+                  className={`h-4 w-4 ${star <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="text-sm">
+            <span className="text-muted-foreground">Overall:</span>
+            <div className="flex mt-1">
+              {[1, 2, 3, 4, 5].map(star => (
+                <Star 
+                  key={star}
+                  className={`h-3.5 w-3.5 ${star <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className="text-sm">
+            <span className="text-muted-foreground">Food:</span>
+            <div className="flex mt-1">
+              {[1, 2, 3, 4, 5].map(star => (
+                <Star 
+                  key={star}
+                  className={`h-3.5 w-3.5 ${star <= review.food_rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <p className="mb-6">{review.content}</p>
+        
+        {review.photos && review.photos.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {review.photos.map((photo, index) => (
+              <img 
+                key={index}
+                src={photo}
+                alt={`Review photo ${index + 1}`}
+                className="w-20 h-20 object-cover rounded"
+              />
+            ))}
           </div>
         )}
-      </div>
-    </div>
+        
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={onUpvote}
+            disabled={isUpvoting || !user}
+          >
+            <ThumbsUp className="h-4 w-4 mr-2" />
+            {review.upvotes} Helpful
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

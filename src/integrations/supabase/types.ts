@@ -9,13 +9,180 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      colleges: {
+        Row: {
+          created_at: string
+          id: string
+          location: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hostels: {
+        Row: {
+          amenities: string[]
+          capacity: number
+          college_id: string
+          created_at: string
+          description: string
+          distance: string
+          id: string
+          location: string
+          mess_food: string
+          name: string
+          photos: string[]
+          rating: number | null
+          rent: string
+          type: string
+          updated_at: string
+          warden_email: string
+          warden_name: string
+          warden_phone: string
+        }
+        Insert: {
+          amenities?: string[]
+          capacity: number
+          college_id: string
+          created_at?: string
+          description: string
+          distance: string
+          id?: string
+          location: string
+          mess_food: string
+          name: string
+          photos?: string[]
+          rating?: number | null
+          rent: string
+          type: string
+          updated_at?: string
+          warden_email: string
+          warden_name: string
+          warden_phone: string
+        }
+        Update: {
+          amenities?: string[]
+          capacity?: number
+          college_id?: string
+          created_at?: string
+          description?: string
+          distance?: string
+          id?: string
+          location?: string
+          mess_food?: string
+          name?: string
+          photos?: string[]
+          rating?: number | null
+          rent?: string
+          type?: string
+          updated_at?: string
+          warden_email?: string
+          warden_name?: string
+          warden_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hostels_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          alias_name: string | null
+          full_name: string
+          id: string
+          use_alias_for_reviews: boolean | null
+        }
+        Insert: {
+          alias_name?: string | null
+          full_name: string
+          id: string
+          use_alias_for_reviews?: boolean | null
+        }
+        Update: {
+          alias_name?: string | null
+          full_name?: string
+          id?: string
+          use_alias_for_reviews?: boolean | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          content: string
+          created_at: string
+          food_rating: number
+          hostel_id: string
+          id: string
+          photos: string[] | null
+          rating: number
+          updated_at: string
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          food_rating: number
+          hostel_id: string
+          id?: string
+          photos?: string[] | null
+          rating: number
+          updated_at?: string
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          food_rating?: number
+          hostel_id?: string
+          id?: string
+          photos?: string[] | null
+          rating?: number
+          updated_at?: string
+          upvotes?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_hostel_id_fkey"
+            columns: ["hostel_id"]
+            isOneToOne: false
+            referencedRelation: "hostels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_hostel_count: {
+        Args: {
+          college_id: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

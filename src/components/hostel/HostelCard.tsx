@@ -1,29 +1,23 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Users, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
-interface Hostel {
-  id: number;
-  name: string;
-  type: string;
-  distance: string;
-  capacity: number;
-  rating: number;
-  amenities: string[];
-  description: string;
-  rent: string;
-}
+import type { Hostel } from '@/types';
+
 interface HostelCardProps {
   hostel: Hostel;
   collegeId: string;
 }
+
 const HostelCard = ({
   hostel,
   collegeId
 }: HostelCardProps) => {
-  return <Card key={hostel.id} className="overflow-hidden hover:shadow-md transition-shadow">
+  return (
+    <Card key={hostel.id} className="overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{hostel.name}</CardTitle>
@@ -56,13 +50,13 @@ const HostelCard = ({
         <div className="mb-2">
           <h4 className="text-sm font-medium mb-2">Amenities:</h4>
           <div className="flex flex-wrap gap-2">
-            {hostel.amenities.map((amenity, index) => <span key={index} className="text-xs bg-muted px-2 py-1 rounded-full">
+            {hostel.amenities.map((amenity, index) => (
+              <span key={index} className="text-xs bg-muted px-2 py-1 rounded-full">
                 {amenity}
-              </span>)}
+              </span>
+            ))}
           </div>
         </div>
-        
-        
       </CardContent>
       
       <CardFooter>
@@ -72,6 +66,8 @@ const HostelCard = ({
           </Link>
         </Button>
       </CardFooter>
-    </Card>;
+    </Card>
+  );
 };
+
 export default HostelCard;

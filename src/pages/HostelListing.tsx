@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { mockColleges, mockHostels } from '@/data/mockData';
 import HostelCard from '@/components/hostel/HostelCard';
 import HostelFilters from '@/components/hostel/HostelFilters';
 import EmptyState from '@/components/hostel/EmptyState';
 import CollegeHeader from '@/components/hostel/CollegeHeader';
+import { useColleges } from '@/hooks/useColleges';
+import { useHostels } from '@/hooks/useHostels';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Pagination,
   PaginationContent,
@@ -25,21 +27,22 @@ const HostelListing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const hostelsPerPage = 4;
   
-  // Find the college based on the ID from the URL
-  const college = mockColleges.find(c => c.id === parseInt(collegeId || '0'));
+  // Fetch the specific college
+  const { data: colleges, isLoading: isCollegeLoading, error: collegeError } = useColleges();
+  const college = colleges?.find(c => c.id === collegeId);
   
-  // Filter hostels based on search term and active filter
-  const filteredHostels = mockHostels.filter(hostel => {
-    const matchesSearch = hostel.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = activeFilter === 'all' || hostel.type.toLowerCase() === activeFilter.toLowerCase();
-    return matchesSearch && matchesFilter;
-  });
+  // Fetch hostels for this college
+  const { 
+    data: hostels, 
+    isLoading: isHostelsLoading, 
+    error: hostelsError 
+  } = useHostels(collegeId || '', searchTerm, activeFilter);
   
   // Calculate pagination
   const indexOfLastHostel = currentPage * hostelsPerPage;
   const indexOfFirstHostel = indexOfLastHostel - hostelsPerPage;
-  const currentHostels = filteredHostels.slice(indexOfFirstHostel, indexOfLastHostel);
-  const totalPages = Math.ceil(filteredHostels.length / hostelsPerPage);
+  const currentHostels = hostels ? hostels.slice(indexOfFirstHostel, indexOfLastHostel) : [];
+  const totalPages = hostels ? Math.ceil(hostels.length / hostelsPerPage) : 0;
   
   // Handler to clear filters
   const handleClearFilters = () => {
@@ -47,7 +50,7 @@ const HostelListing = () => {
     setActiveFilter('all');
   };
   
-  if (!college) {
+  if (collegeError || (colleges && colleges.length > 0 && !college)) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -73,7 +76,17 @@ const HostelListing = () => {
       
       <main className="flex-1 pt-24 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <CollegeHeader college={college} />
+          {/* College Header */}
+          {isCollegeLoading ? (
+            <div className="mb-12">
+              <Skeleton className="h-4 w-24 mb-4" />
+              <Skeleton className="h-10 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2 mb-6" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ) : college ? (
+            <CollegeHeader college={college} />
+          ) : null}
           
           <HostelFilters 
             searchTerm={searchTerm}
@@ -82,24 +95,61 @@ const HostelListing = () => {
             setActiveFilter={setActiveFilter}
           />
           
+          {/* Loading State */}
+          {isHostelsLoading && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="rounded-lg border p-6 space-y-4">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-6 w-1/3" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-24 w-full" />
+                  <div className="flex flex-wrap gap-2">
+                    {[...Array(4)].map((_, i) => (
+                      <Skeleton key={i} className="h-6 w-16 rounded-full" />
+                    ))}
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Error State */}
+          {hostelsError && (
+            <div className="text-center py-12">
+              <p className="text-destructive">
+                Error loading hostels. Please try again later.
+              </p>
+            </div>
+          )}
+          
           {/* Hostel Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {currentHostels.map((hostel) => (
-              <HostelCard 
-                key={hostel.id} 
-                hostel={hostel} 
-                collegeId={collegeId || ''}
-              />
-            ))}
-          </div>
+          {!isHostelsLoading && !hostelsError && currentHostels && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {currentHostels.map((hostel) => (
+                <HostelCard 
+                  key={hostel.id} 
+                  hostel={hostel} 
+                  collegeId={collegeId || ''}
+                />
+              ))}
+            </div>
+          )}
           
           {/* Empty State */}
-          {filteredHostels.length === 0 && (
+          {!isHostelsLoading && !hostelsError && hostels && hostels.length === 0 && (
             <EmptyState onClearFilters={handleClearFilters} />
           )}
           
           {/* Pagination */}
-          {filteredHostels.length > 0 && (
+          {!isHostelsLoading && !hostelsError && hostels && hostels.length > 0 && (
             <Pagination>
               <PaginationContent>
                 <PaginationItem>

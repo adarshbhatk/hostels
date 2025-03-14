@@ -8,15 +8,12 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockColleges } from '@/data/mockData';
+import { useColleges } from '@/hooks/useColleges';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Colleges = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const filteredColleges = mockColleges.filter(college =>
-    college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    college.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { data: colleges, isLoading, error } = useColleges(searchTerm);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -56,37 +53,68 @@ const Colleges = () => {
             </div>
           </div>
           
-          {/* Colleges Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredColleges.map((college) => (
-              <Card key={college.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle>{college.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-2">
-                    <span className="font-medium">Location:</span> {college.location}
-                  </p>
-                  <p className="text-muted-foreground">
-                    <span className="font-medium">Hostels:</span> {college.hostelCount}
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-hostel-600 border-hostel-600 hover:bg-hostel-50"
-                    asChild
-                  >
-                    <Link to={`/colleges/${college.id}`}>
-                      View Hostels
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          {/* Loading State */}
+          {isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, index) => (
+                <Card key={index} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </CardContent>
+                  <CardFooter>
+                    <Skeleton className="h-10 w-full" />
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
           
-          {filteredColleges.length === 0 && (
+          {/* Error State */}
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-destructive">
+                Error loading colleges. Please try again later.
+              </p>
+            </div>
+          )}
+          
+          {/* Colleges Grid */}
+          {!isLoading && !error && colleges && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {colleges.map((college) => (
+                <Card key={college.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle>{college.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-2">
+                      <span className="font-medium">Location:</span> {college.location}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <span className="font-medium">Hostels:</span> {college.hostelCount || 0}
+                    </p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-hostel-600 border-hostel-600 hover:bg-hostel-50"
+                      asChild
+                    >
+                      <Link to={`/colleges/${college.id}`}>
+                        View Hostels
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+          
+          {!isLoading && !error && colleges && colleges.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 No colleges found matching "{searchTerm}".

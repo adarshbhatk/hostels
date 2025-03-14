@@ -4,21 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Star, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
+import type { Hostel, College } from '@/types';
+import { useReviews } from '@/hooks/useReviews';
 
 interface HostelHeaderProps {
-  hostel: {
-    id: number;
-    name: string;
-    type: string;
-    location: string;
-    rating: number;
-    reviews: any[];
-    photos: string[];
-  };
-  college: {
-    id: number;
-    name: string;
-  };
+  hostel: Hostel;
+  college: College;
 }
 
 const HostelHeader = ({
@@ -26,6 +17,7 @@ const HostelHeader = ({
   college
 }: HostelHeaderProps) => {
   const navigate = useNavigate();
+  const { data: reviews = [] } = useReviews(hostel.id);
 
   // Generate star rating display
   const renderStars = (rating: number) => {
@@ -69,12 +61,10 @@ const HostelHeader = ({
             <div className="flex items-center gap-4">
               {renderStars(hostel.rating)}
               <span className="text-sm text-muted-foreground">
-                ({hostel.reviews.length} reviews)
+                ({reviews.length} reviews)
               </span>
             </div>
           </div>
-          
-          
         </div>
         
         {/* Image Gallery */}
