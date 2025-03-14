@@ -45,7 +45,10 @@ export const useColleges = (searchTerm: string = '') => {
         })
       );
       
+      console.log('Fetched colleges with counts:', collegesWithCounts);
       return collegesWithCounts as College[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 };

@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Colleges = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: colleges, isLoading, error } = useColleges(searchTerm);
+  const { data: colleges, isLoading, error, isError } = useColleges(searchTerm);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -28,9 +28,7 @@ const Colleges = () => {
     }
     
     // Log colleges data for debugging
-    if (colleges) {
-      console.log('Loaded colleges:', colleges);
-    }
+    console.log('Colleges component received data:', colleges);
   }, [error, colleges, toast]);
   
   return (
@@ -92,19 +90,19 @@ const Colleges = () => {
           )}
           
           {/* Error State */}
-          {error && (
+          {isError && (
             <div className="text-center py-12">
               <p className="text-destructive">
                 Error loading colleges. Please try again later.
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                {error.message || String(error)}
+                {error instanceof Error ? error.message : 'Unknown error'}
               </p>
             </div>
           )}
           
           {/* Colleges Grid */}
-          {!isLoading && !error && colleges && (
+          {!isLoading && !isError && colleges && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {colleges.map((college) => (
                 <Card key={college.id} className="hover:shadow-md transition-shadow">
@@ -135,7 +133,7 @@ const Colleges = () => {
             </div>
           )}
           
-          {!isLoading && !error && colleges && colleges.length === 0 && (
+          {!isLoading && !isError && colleges && colleges.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 {searchTerm 
