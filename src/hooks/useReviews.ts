@@ -35,9 +35,9 @@ export const useReviews = (hostelId: string) => {
         return {
           ...review,
           user: profileData ? {
-            full_name: profileData.full_name,
-            alias_name: profileData.alias_name,
-            use_alias_for_reviews: profileData.use_alias_for_reviews
+            full_name: profileData.full_name as string | undefined,
+            alias_name: profileData.alias_name as string | undefined,
+            use_alias_for_reviews: profileData.use_alias_for_reviews as boolean | undefined
           } : undefined
         };
       });
