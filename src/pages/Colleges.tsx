@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -10,10 +10,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useColleges } from '@/hooks/useColleges';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const Colleges = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: colleges, isLoading, error } = useColleges(searchTerm);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    if (error) {
+      console.error('College fetch error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load colleges. Please try again later.',
+        variant: 'destructive',
+      });
+    }
+    
+    // Log colleges data for debugging
+    if (colleges) {
+      console.log('Loaded colleges:', colleges);
+    }
+  }, [error, colleges, toast]);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -79,6 +97,9 @@ const Colleges = () => {
               <p className="text-destructive">
                 Error loading colleges. Please try again later.
               </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {error.message || String(error)}
+              </p>
             </div>
           )}
           
@@ -117,7 +138,9 @@ const Colleges = () => {
           {!isLoading && !error && colleges && colleges.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                No colleges found matching "{searchTerm}".
+                {searchTerm 
+                  ? `No colleges found matching "${searchTerm}".`
+                  : 'No colleges found. Please check back later.'}
               </p>
             </div>
           )}

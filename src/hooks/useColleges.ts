@@ -20,24 +20,32 @@ export const useColleges = (searchTerm: string = '') => {
         throw error;
       }
       
+      // If we have no colleges, return an empty array
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
       // For each college, get the hostel count
       const collegesWithCounts = await Promise.all(
         data.map(async (college) => {
-          const { data: countData, error: countError } = await supabase.rpc(
-            'get_hostel_count',
-            { college_id: college.id }
-          );
-          
-          if (countError) {
-            console.error('Error fetching hostel count:', countError);
+          try {
+            const { data: countData, error: countError } = await supabase
+              .rpc('get_hostel_count', { college_id: college.id });
+            
+            if (countError) {
+              console.error('Error fetching hostel count:', countError);
+              return { ...college, hostelCount: 0 };
+            }
+            
+            return { ...college, hostelCount: countData || 0 };
+          } catch (err) {
+            console.error('Exception in hostel count fetch:', err);
             return { ...college, hostelCount: 0 };
           }
-          
-          return { ...college, hostelCount: countData || 0 };
         })
       );
       
-      return collegesWithCounts;
+      return collegesWithCounts as College[];
     },
   });
 };
