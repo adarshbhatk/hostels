@@ -32,13 +32,19 @@ export const useReviews = (hostelId: string) => {
           ? review.profiles 
           : null;
           
+        // Create a properly typed user object from the profile data
+        const user = profileData ? {
+          full_name: typeof profileData === 'object' && 'full_name' in profileData ? 
+            profileData.full_name as string : undefined,
+          alias_name: typeof profileData === 'object' && 'alias_name' in profileData ? 
+            profileData.alias_name as string : undefined,
+          use_alias_for_reviews: typeof profileData === 'object' && 'use_alias_for_reviews' in profileData ? 
+            profileData.use_alias_for_reviews as boolean : undefined
+        } : undefined;
+        
         return {
           ...review,
-          user: profileData ? {
-            full_name: profileData.full_name as string | undefined,
-            alias_name: profileData.alias_name as string | undefined,
-            use_alias_for_reviews: profileData.use_alias_for_reviews as boolean | undefined
-          } : undefined
+          user
         };
       });
       
