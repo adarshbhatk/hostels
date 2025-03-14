@@ -27,7 +27,8 @@ export const useHostels = (collegeId: string, searchTerm: string = '', filterTyp
         throw error;
       }
       
-      return data;
+      // Cast the result to the correct Hostel[] type
+      return data as Hostel[];
     },
     enabled: !!collegeId,
   });

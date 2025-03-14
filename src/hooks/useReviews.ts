@@ -25,10 +25,15 @@ export const useReviews = (hostelId: string) => {
         throw error;
       }
       
+      // Map the data to include the user information from profiles
       return data.map(review => ({
         ...review,
-        user: review.profiles
-      }));
+        user: review.profiles ? {
+          full_name: review.profiles.full_name,
+          alias_name: review.profiles.alias_name,
+          use_alias_for_reviews: review.profiles.use_alias_for_reviews
+        } : undefined
+      })) as Review[];
     },
     enabled: !!hostelId,
   });

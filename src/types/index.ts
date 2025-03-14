@@ -5,6 +5,8 @@ export interface College {
   location: string;
   created_at?: string;
   updated_at?: string;
+  // Additional property needed for UI
+  hostelCount?: number;
 }
 
 export interface Hostel {
@@ -45,4 +47,5 @@ export interface Review {
     alias_name?: string;
     use_alias_for_reviews?: boolean;
   };
+  profiles?: any; // For handling Supabase join response
 }

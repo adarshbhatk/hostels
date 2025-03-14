@@ -18,7 +18,8 @@ export const useHostel = (hostelId: string) => {
         throw error;
       }
       
-      return data;
+      // Cast the result to the correct Hostel type
+      return data as Hostel;
     },
     enabled: !!hostelId,
   });
