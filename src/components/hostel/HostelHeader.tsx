@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Star, ArrowLeft } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
+
 interface HostelHeaderProps {
   hostel: {
     id: number;
@@ -18,6 +20,7 @@ interface HostelHeaderProps {
     name: string;
   };
 }
+
 const HostelHeader = ({
   hostel,
   college
@@ -31,6 +34,7 @@ const HostelHeader = ({
         <span className="ml-1 text-sm font-medium">{rating.toFixed(1)}</span>
       </div>;
   };
+  
   return <>
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 mb-6 text-sm">
@@ -82,4 +86,5 @@ const HostelHeader = ({
       </div>
     </>;
 };
+
 export default HostelHeader;
