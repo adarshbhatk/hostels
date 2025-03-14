@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AuthForm = () => {
   const [searchParams] = useSearchParams();
@@ -16,6 +17,8 @@ const AuthForm = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { signIn, signUp, user } = useAuth();
+  const navigate = useNavigate();
   
   const [signinData, setSigninData] = useState({
     email: '',
@@ -28,23 +31,49 @@ const AuthForm = () => {
     password: '',
     confirmPassword: ''
   });
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
   
-  const handleSigninSubmit = (e: React.FormEvent) => {
+  const handleSigninSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!signinData.email || !signinData.password) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Not implemented yet",
-        description: "Authentication functionality will be added in future updates.",
-      });
+    try {
+      await signIn(signinData.email, signinData.password);
+      // Navigation will happen in the useEffect when user state changes
+    } catch (error) {
+      // Error is handled in the signIn function
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
   
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!signupData.name || !signupData.email || !signupData.password) {
+      toast({
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (signupData.password !== signupData.confirmPassword) {
       toast({
@@ -55,16 +84,25 @@ const AuthForm = () => {
       return;
     }
     
+    if (signupData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Not implemented yet",
-        description: "Authentication functionality will be added in future updates.",
-      });
+    try {
+      await signUp(signupData.email, signupData.password, signupData.name);
+      // The user will be redirected after email confirmation
+    } catch (error) {
+      // Error is handled in the signUp function
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
   
   const updateSigninData = (field: string, value: string) => {
@@ -223,7 +261,7 @@ const AuthForm = () => {
                 </button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Password must be at least 8 characters long
+                Password must be at least 6 characters long
               </p>
             </div>
             
