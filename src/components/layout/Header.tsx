@@ -1,14 +1,23 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, profile, signOut, displayName } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +37,10 @@ const Header = () => {
     { name: 'About', path: '/about' },
     { name: 'Colleges', path: '/colleges' },
   ];
+  
+  const handleSignOut = async () => {
+    await signOut();
+  };
   
   return (
     <header 
@@ -65,21 +78,58 @@ const Header = () => {
         </nav>
         
         <div className="hidden md:flex items-center gap-4">
-          <Button 
-            asChild
-            variant="ghost" 
-            size="sm"
-            className="font-medium"
-          >
-            <Link to="/auth">Sign In</Link>
-          </Button>
-          <Button 
-            asChild
-            size="sm"
-            className="bg-hostel-600 hover:bg-hostel-700 text-white"
-          >
-            <Link to="/auth?tab=signup">Sign Up</Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">{displayName || 'Account'}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="px-2 py-1.5 text-sm font-medium">
+                  {profile?.fullName}
+                </div>
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {user.email}
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer w-full">
+                    Your Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/reviews" className="cursor-pointer w-full">
+                    Your Reviews
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-500 focus:text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button 
+                asChild
+                variant="ghost" 
+                size="sm"
+                className="font-medium"
+              >
+                <Link to="/auth">Sign In</Link>
+              </Button>
+              <Button 
+                asChild
+                size="sm"
+                className="bg-hostel-600 hover:bg-hostel-700 text-white"
+              >
+                <Link to="/auth?tab=signup">Sign Up</Link>
+              </Button>
+            </>
+          )}
         </div>
         
         {/* Mobile Menu Button */}
@@ -117,24 +167,48 @@ const Header = () => {
               ))}
             </nav>
             <div className="flex flex-col space-y-3 pt-4 border-t border-border">
-              <Button 
-                asChild
-                variant="outline" 
-                size="sm"
-                className="w-full justify-start font-medium"
-              >
-                <Link to="/auth">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Link>
-              </Button>
-              <Button 
-                asChild
-                size="sm"
-                className="w-full justify-start bg-hostel-600 hover:bg-hostel-700 text-white"
-              >
-                <Link to="/auth?tab=signup">Sign Up</Link>
-              </Button>
+              {user ? (
+                <>
+                  <div className="text-sm font-medium">{profile?.fullName}</div>
+                  <div className="text-xs text-muted-foreground mb-2">{user.email}</div>
+                  <Link to="/profile" className="text-sm text-muted-foreground hover:text-foreground">
+                    Your Profile
+                  </Link>
+                  <Link to="/reviews" className="text-sm text-muted-foreground hover:text-foreground">
+                    Your Reviews
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    asChild
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-start font-medium"
+                  >
+                    <Link to="/auth">
+                      <User className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button 
+                    asChild
+                    size="sm"
+                    className="w-full justify-start bg-hostel-600 hover:bg-hostel-700 text-white"
+                  >
+                    <Link to="/auth?tab=signup">Sign Up</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
