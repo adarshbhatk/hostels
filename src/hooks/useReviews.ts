@@ -3,6 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Review } from '@/types';
 
+interface ProfileData {
+  full_name?: string;
+  alias_name?: string;
+  use_alias_for_reviews?: boolean;
+}
+
 export const useReviews = (hostelId: string) => {
   return useQuery({
     queryKey: ['reviews', hostelId],
@@ -29,17 +35,14 @@ export const useReviews = (hostelId: string) => {
       const reviews = data.map(review => {
         // Safely handle profiles data which might be null or an error object
         const profileData = review.profiles && typeof review.profiles === 'object' 
-          ? review.profiles 
+          ? review.profiles as ProfileData
           : null;
           
         // Create a properly typed user object from the profile data
         const user = profileData ? {
-          full_name: typeof profileData === 'object' && 'full_name' in profileData ? 
-            profileData.full_name as string : undefined,
-          alias_name: typeof profileData === 'object' && 'alias_name' in profileData ? 
-            profileData.alias_name as string : undefined,
-          use_alias_for_reviews: typeof profileData === 'object' && 'use_alias_for_reviews' in profileData ? 
-            profileData.use_alias_for_reviews as boolean : undefined
+          full_name: profileData.full_name,
+          alias_name: profileData.alias_name,
+          use_alias_for_reviews: profileData.use_alias_for_reviews
         } : undefined;
         
         return {
