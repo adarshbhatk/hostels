@@ -146,8 +146,14 @@ const CollegesAdmin = () => {
   });
 
   // Handle form submissions
+
   const handleAddSubmit = (data: Omit<College, 'id' | 'created_at' | 'updated_at'>) => {
-    addCollegeMutation.mutate(data);
+    console.log("Submitting college data:", data);
+    addCollegeMutation.mutate(data, {
+      onError: (error) => {
+        console.error("Error adding college:", error);
+      },
+    });
   };
 
   const handleEditSubmit = (data: Omit<College, 'id' | 'created_at' | 'updated_at'>) => {
