@@ -3,31 +3,29 @@ export interface College {
   id: string;
   name: string;
   location: string;
-  created_at?: string;
-  updated_at?: string;
-  // Additional property needed for UI
-  hostelCount?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Hostel {
   id: string;
-  college_id: string;
   name: string;
-  type: 'Boys' | 'Girls' | 'Co-ed';
-  distance: string;
+  college_id: string;
+  type: string;
   capacity: number;
-  rating: number;
-  amenities: string[];
-  description: string;
   rent: string;
+  description: string;
+  amenities: string[];
+  photos: string[];
   location: string;
-  mess_food: 'Veg' | 'Non-veg' | 'Both';
+  distance: string;
+  rating: number | null;
+  mess_food: string;
   warden_name: string;
   warden_phone: string;
   warden_email: string;
-  photos: string[];
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Review {
@@ -37,15 +35,21 @@ export interface Review {
   rating: number;
   food_rating: number;
   content: string;
-  photos: string[];
-  upvotes: number;
+  photos: string[] | null;
+  upvotes: number | null;
   created_at: string;
-  updated_at?: string;
-  // Additional fields from join query
+  updated_at: string;
   user?: {
-    full_name?: string;
-    alias_name?: string;
-    use_alias_for_reviews?: boolean;
+    full_name: string;
+    alias_name: string | null;
+    use_alias_for_reviews: boolean | null;
   };
-  profiles?: any; // For handling Supabase join response
+}
+
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  alias_name: string | null;
+  use_alias_for_reviews: boolean | null;
+  role: string;
 }

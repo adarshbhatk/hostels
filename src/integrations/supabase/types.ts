@@ -109,18 +109,21 @@ export type Database = {
           alias_name: string | null
           full_name: string
           id: string
+          role: string
           use_alias_for_reviews: boolean | null
         }
         Insert: {
           alias_name?: string | null
           full_name: string
           id: string
+          role?: string
           use_alias_for_reviews?: boolean | null
         }
         Update: {
           alias_name?: string | null
           full_name?: string
           id?: string
+          role?: string
           use_alias_for_reviews?: boolean | null
         }
         Relationships: []
@@ -182,6 +185,10 @@ export type Database = {
           college_id: string
         }
         Returns: number
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
