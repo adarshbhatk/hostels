@@ -24,10 +24,16 @@ const Admin = () => {
       }
 
       try {
+        console.log("Checking admin status for user:", user.id);
         const { data, error } = await supabase
           .rpc('is_admin');
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error checking admin status:', error);
+          throw error;
+        }
+        
+        console.log("Admin status result:", data);
         setIsAdmin(data);
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -37,8 +43,10 @@ const Admin = () => {
       }
     };
 
-    checkAdminStatus();
-  }, [user]);
+    if (!isLoading) {
+      checkAdminStatus();
+    }
+  }, [user, isLoading]);
 
   if (isLoading || isAdminLoading) {
     return (
