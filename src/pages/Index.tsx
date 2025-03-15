@@ -6,13 +6,22 @@ import AnimatedCard from '@/components/ui/AnimatedCard';
 import { Badge } from '@/components/ui/Badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useColleges } from '@/hooks/useColleges';
 
 const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const { data: colleges } = useColleges();
   
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+  
+  // Find featured colleges for the links
+  const findCollegeId = (name: string) => {
+    if (!colleges) return '';
+    const college = colleges.find(c => c.name === name);
+    return college ? college.id : '';
+  };
   
   const features = [
     {
@@ -53,7 +62,6 @@ const Index = () => {
     { value: '1,000+', label: 'Reviews' },
     { value: '10,000+', label: 'Students Helped' },
   ];
-  
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -113,21 +121,21 @@ const Index = () => {
             <span className="font-medium">Top colleges:</span>{' '}
             <span className="space-x-2">
               <Link 
-                to="/colleges/2" 
+                to={`/colleges/${findCollegeId('IIT Bombay')}`} 
                 className="hover:text-hostel-600 transition-colors"
               >
                 IIT Bombay
               </Link>
               {' | '}
               <Link 
-                to="/colleges/7" 
+                to={`/colleges/${findCollegeId('BITS Pilani')}`} 
                 className="hover:text-hostel-600 transition-colors"
               >
                 BITS Pilani
               </Link>
               {' | '}
               <Link 
-                to="/colleges/8" 
+                to={`/colleges/${findCollegeId('Christ University')}`} 
                 className="hover:text-hostel-600 transition-colors"
               >
                 Christ University
