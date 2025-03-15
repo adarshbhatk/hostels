@@ -77,7 +77,8 @@ const Admin = () => {
       console.log("Auth loading complete, checking admin status");
       checkAdminStatus();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading]); 
+
 
   console.log("Admin page render state:", { authLoading, isAdminLoading, isAdmin, user: !!user });
 
