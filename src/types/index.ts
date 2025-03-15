@@ -5,6 +5,7 @@ export interface College {
   location: string;
   created_at: string;
   updated_at: string;
+  hostelCount?: number;
 }
 
 export interface Hostel {
