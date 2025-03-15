@@ -10,64 +10,86 @@ import HostelsAdmin from '@/components/admin/HostelsAdmin';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Admin = () => {
-  const { user, profile, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("Admin page mounted");
+    console.log("Auth loading:", authLoading);
+    console.log("User:", user);
+    
     const checkAdminStatus = async () => {
       if (!user) {
+        console.log("No user, setting admin loading to false");
         setIsAdminLoading(false);
         return;
       }
 
+      console.log("Checking admin status for user:", user.id);
+      setLoadingError(null);
+      
       try {
-        console.log("Checking admin status for user:", user.id);
-        
-        // Get the user's profile to check the role directly
-        const { data: profileData, error: profileError } = await supabase
+        // Simple direct query approach
+        const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
         
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setLoadingError(`Failed to check admin status: ${error.message}`);
           setIsAdmin(false);
           setIsAdminLoading(false);
           return;
         }
         
-        console.log("Profile data:", profileData);
+        console.log("Profile data retrieved:", data);
+        
+        if (!data) {
+          console.log("No profile found for user");
+          setIsAdmin(false);
+          setIsAdminLoading(false);
+          return;
+        }
         
         // Check if the user has the admin role
-        const isUserAdmin = profileData?.role === 'admin';
-        console.log("Is user admin?", isUserAdmin);
+        const userIsAdmin = data.role === 'admin';
+        console.log("Is user admin?", userIsAdmin);
         
-        setIsAdmin(isUserAdmin);
+        setIsAdmin(userIsAdmin);
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Unexpected error checking admin status:', error);
+        setLoadingError(`An unexpected error occurred: ${(error as Error).message}`);
         setIsAdmin(false);
       } finally {
+        console.log("Setting admin loading to false");
         setIsAdminLoading(false);
       }
     };
 
-    if (!isLoading) {
+    if (!authLoading) {
+      console.log("Auth loading complete, checking admin status");
       checkAdminStatus();
     }
-  }, [user, isLoading]);
+  }, [user, authLoading]);
 
-  if (isLoading || isAdminLoading) {
+  console.log("Admin page render state:", { authLoading, isAdminLoading, isAdmin, user: !!user });
+
+  // If authentication is still loading, show loading state
+  if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin text-hostel-600 mx-auto" />
-            <p className="mt-4 text-muted-foreground">Loading...</p>
+            <p className="mt-4 text-muted-foreground">Loading authentication...</p>
           </div>
         </main>
         <Footer />
@@ -75,10 +97,47 @@ const Admin = () => {
     );
   }
 
+  // If not authenticated, redirect to login
   if (!user) {
+    console.log("No user, redirecting to auth");
     return <Navigate to="/auth" replace />;
   }
 
+  // If we're still checking admin status
+  if (isAdminLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-hostel-600 mx-auto" />
+            <p className="mt-4 text-muted-foreground">Verifying admin privileges...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // If there was an error loading admin status
+  if (loadingError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center p-6">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {loadingError}
+            </AlertDescription>
+          </Alert>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // If not an admin, show access denied
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -96,6 +155,7 @@ const Admin = () => {
     );
   }
 
+  // If we get here, the user is authenticated and is an admin
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
