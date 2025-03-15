@@ -25,16 +25,28 @@ const Admin = () => {
 
       try {
         console.log("Checking admin status for user:", user.id);
-        const { data, error } = await supabase
-          .rpc('is_admin');
         
-        if (error) {
-          console.error('Error checking admin status:', error);
-          throw error;
+        // Get the user's profile to check the role directly
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          setIsAdmin(false);
+          setIsAdminLoading(false);
+          return;
         }
         
-        console.log("Admin status result:", data);
-        setIsAdmin(data);
+        console.log("Profile data:", profileData);
+        
+        // Check if the user has the admin role
+        const isUserAdmin = profileData?.role === 'admin';
+        console.log("Is user admin?", isUserAdmin);
+        
+        setIsAdmin(isUserAdmin);
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
