@@ -40,11 +40,16 @@ export interface Review {
   upvotes: number | null;
   created_at: string;
   updated_at: string;
+  status: 'pending' | 'approved';
   user?: {
     full_name: string;
     alias_name: string | null;
     use_alias_for_reviews: boolean | null;
   };
+  hostels?: {
+    name: string;
+  };
+  hostelName?: string;
 }
 
 export interface UserProfile {

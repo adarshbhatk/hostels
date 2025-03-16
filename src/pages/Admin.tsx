@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import CollegesAdmin from '@/components/admin/CollegesAdmin';
 import HostelsAdmin from '@/components/admin/HostelsAdmin';
+import ReviewsAdmin from '@/components/admin/ReviewsAdmin';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -165,7 +166,7 @@ const Admin = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Admin Panel</h1>
           <p className="text-muted-foreground mt-2">
-            Manage colleges and hostels in the system
+            Manage colleges, hostels, and reviews in the system
           </p>
         </div>
         
@@ -173,6 +174,7 @@ const Admin = () => {
           <TabsList className="mb-8">
             <TabsTrigger value="colleges">Colleges</TabsTrigger>
             <TabsTrigger value="hostels">Hostels</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
           
           <TabsContent value="colleges" className="mt-0">
@@ -181,6 +183,10 @@ const Admin = () => {
           
           <TabsContent value="hostels" className="mt-0">
             <HostelsAdmin />
+          </TabsContent>
+          
+          <TabsContent value="reviews" className="mt-0">
+            <ReviewsAdmin />
           </TabsContent>
         </Tabs>
       </main>

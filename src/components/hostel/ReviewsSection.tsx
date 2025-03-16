@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { ThumbsUp, Star, MessageSquare, Calendar, Image, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { MAX_FILE_SIZE } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/Badge';
 
 interface ReviewsSectionProps {
   reviews: Review[];
@@ -55,8 +57,10 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     }
   };
   
-  // Filter reviews based on active tab
-  const filteredReviews = reviews.filter(review => {
+  // Filter reviews based on active tab and only show approved reviews
+  const approvedReviews = reviews.filter(review => review.status === 'approved');
+  
+  const filteredReviews = approvedReviews.filter(review => {
     switch (activeTab) {
       case 'positive':
         return review.rating >= 4;
@@ -67,13 +71,13 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     }
   });
 
-  // Calculate average ratings
-  const avgRating = reviews.length > 0 
-    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) 
+  // Calculate average ratings from approved reviews only
+  const avgRating = approvedReviews.length > 0 
+    ? (approvedReviews.reduce((sum, review) => sum + review.rating, 0) / approvedReviews.length).toFixed(1) 
     : 'N/A';
   
-  const avgFoodRating = reviews.length > 0 
-    ? (reviews.reduce((sum, review) => sum + review.food_rating, 0) / reviews.length).toFixed(1) 
+  const avgFoodRating = approvedReviews.length > 0 
+    ? (approvedReviews.reduce((sum, review) => sum + review.food_rating, 0) / approvedReviews.length).toFixed(1) 
     : 'N/A';
     
   // Function to render stars
@@ -252,7 +256,8 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
             food_rating: newReviewData.foodRating,
             content: newReviewData.content,
             photos: photoUrls,
-            upvotes: 0
+            upvotes: 0,
+            status: 'pending' // All new reviews are pending by default
           }
         ])
         .select();
@@ -263,8 +268,8 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', hostelId] });
       toast({
-        title: 'Review Added',
-        description: 'Your review has been added successfully.',
+        title: 'Review Submitted',
+        description: 'Your review has been submitted and is pending approval by an administrator.',
       });
       setShowAddReviewDialog(false);
       setNewReview({ rating: 0, foodRating: 0, content: '' });
@@ -322,6 +327,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     };
   }, []);
   
+  // Show loading state
   if (isLoading) {
     return <div className="space-y-4">
       <Skeleton className="h-32 w-full" />
@@ -329,6 +335,11 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
       <Skeleton className="h-64 w-full" />
     </div>;
   }
+  
+  // Get user's pending reviews for this hostel
+  const userPendingReviews = user 
+    ? reviews.filter(review => review.user_id === user.id && review.status === 'pending')
+    : [];
   
   return (
     <div className="space-y-6">
@@ -350,6 +361,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
                   <DialogTitle>Add Your Review</DialogTitle>
                   <DialogDescription>
                     Share your experience at this hostel to help other students.
+                    Reviews will be published after approval by an administrator.
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -445,6 +457,15 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Show pending reviews message */}
+          {userPendingReviews.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+              <p className="text-amber-800">
+                You have {userPendingReviews.length} pending {userPendingReviews.length === 1 ? 'review' : 'reviews'} for this hostel that {userPendingReviews.length === 1 ? 'is' : 'are'} awaiting admin approval.
+              </p>
+            </div>
+          )}
+        
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
               <h3 className="text-sm font-medium mb-2">Overall Rating</h3>
@@ -452,7 +473,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
                 <span className="text-3xl font-bold mr-2">{avgRating}</span>
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               </div>
-              <p className="text-sm text-muted-foreground">Based on {reviews.length} reviews</p>
+              <p className="text-sm text-muted-foreground">Based on {approvedReviews.length} reviews</p>
             </div>
             
             <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
@@ -467,10 +488,10 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
             <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
               <h3 className="text-sm font-medium mb-2">Review Count</h3>
               <div className="flex items-center mb-1">
-                <span className="text-3xl font-bold mr-2">{reviews.length}</span>
+                <span className="text-3xl font-bold mr-2">{approvedReviews.length}</span>
                 <MessageSquare className="h-5 w-5 text-hostel-600" />
               </div>
-              <p className="text-sm text-muted-foreground">Total reviews submitted</p>
+              <p className="text-sm text-muted-foreground">Total published reviews</p>
             </div>
           </div>
         </CardContent>
@@ -478,9 +499,9 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
       
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="all">All Reviews ({reviews.length})</TabsTrigger>
-          <TabsTrigger value="positive">Positive ({reviews.filter(r => r.rating >= 4).length})</TabsTrigger>
-          <TabsTrigger value="negative">Negative ({reviews.filter(r => r.rating <= 2).length})</TabsTrigger>
+          <TabsTrigger value="all">All Reviews ({approvedReviews.length})</TabsTrigger>
+          <TabsTrigger value="positive">Positive ({approvedReviews.filter(r => r.rating >= 4).length})</TabsTrigger>
+          <TabsTrigger value="negative">Negative ({approvedReviews.filter(r => r.rating <= 2).length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">

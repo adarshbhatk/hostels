@@ -137,6 +137,7 @@ export type Database = {
           id: string
           photos: string[] | null
           rating: number
+          status: string
           updated_at: string
           upvotes: number | null
           user_id: string
@@ -149,6 +150,7 @@ export type Database = {
           id?: string
           photos?: string[] | null
           rating: number
+          status?: string
           updated_at?: string
           upvotes?: number | null
           user_id: string
@@ -161,6 +163,7 @@ export type Database = {
           id?: string
           photos?: string[] | null
           rating?: number
+          status?: string
           updated_at?: string
           upvotes?: number | null
           user_id?: string
