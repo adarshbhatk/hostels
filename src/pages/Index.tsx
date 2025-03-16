@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/Badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useColleges } from '@/hooks/useColleges';
+import { useAuth } from '@/context/AuthContext';
+
 const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const {
@@ -60,6 +62,9 @@ const Index = () => {
     value: '10,000+',
     label: 'Students Helped'
   }];
+
+  const { user } = useAuth();
+
   return <div className="min-h-screen flex flex-col">
       <Header />
       
@@ -227,10 +232,10 @@ const Index = () => {
                   Join Hostelwise today and make an informed decision about your college accommodation.
                 </p>
                 <Button asChild size="lg" variant="secondary" className="min-w-[200px] bg-white text-hostel-700 hover:bg-hostel-50">
-                  <Link to="/auth?tab=signup" className="inline-flex items-center">
-                    Get Started
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
+                <Link to={user ? "/colleges" : "/auth?tab=signup"} className="inline-flex items-center">
+  Get Started
+  <ArrowRight className="ml-2 h-5 w-5" />
+</Link>
                 </Button>
               </div>
             </div>
@@ -241,4 +246,5 @@ const Index = () => {
       <Footer />
     </div>;
 };
+
 export default Index;

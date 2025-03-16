@@ -2,9 +2,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Github, Twitter, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+
+  const { user } = useAuth();
   
   return (
     <footer className="bg-background border-t border-border mt-auto">
@@ -81,10 +84,10 @@ const Footer = () => {
                 size="sm"
                 className="w-full flex items-center justify-between"
               >
-                <Link to="/auth?tab=signup">
-                  <span>Join the community</span>
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
+                <Link to={user ? "/colleges" : "/auth?tab=signup"}>
+  <span>Join the community</span>
+  <ArrowRight className="h-4 w-4 ml-2" />
+</Link>
               </Button>
             </div>
           </div>
