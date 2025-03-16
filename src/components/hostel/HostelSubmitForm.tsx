@@ -46,7 +46,9 @@ const hostelSchema = z.object({
   amenities: z.string().transform(val => 
     val.split(',').map(item => item.trim()).filter(Boolean)
   ),
-  mess_food: z.string().min(1, 'Mess food information is required'),
+  mess_food: z.enum(['Veg', 'Non-veg', 'Both'], {
+    required_error: 'Mess food option is required',
+  }),
   warden_name: z.string().min(2, 'Warden name is required'),
   warden_phone: z.string().min(10, 'Valid phone number is required'),
   warden_email: z.string().email('Valid email is required'),
@@ -181,9 +183,9 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="boys">Boys</SelectItem>
-                      <SelectItem value="girls">Girls</SelectItem>
-                      <SelectItem value="co-ed">Co-ed</SelectItem>
+                      <SelectItem value="Boys">Boys</SelectItem>
+                      <SelectItem value="Girls">Girls</SelectItem>
+                      <SelectItem value="Co-ed">Co-ed</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -293,17 +295,25 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
               control={form.control}
               name="mess_food"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mess Food Details</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Information about meal timings, menu, quality, etc." 
-                      rows={3}
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+    <FormItem>
+      <FormLabel>Mess Food</FormLabel>
+      <Select 
+        onValueChange={field.onChange} 
+        defaultValue={field.value}
+      >
+        <FormControl>
+          <SelectTrigger>
+            <SelectValue placeholder="Select mess food option" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent>
+          <SelectItem value="Veg">Veg</SelectItem>
+          <SelectItem value="Non-veg">Non-veg</SelectItem>
+          <SelectItem value="Both">Both</SelectItem>
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
               )}
             />
             
