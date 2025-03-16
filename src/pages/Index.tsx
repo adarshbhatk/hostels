@@ -71,8 +71,7 @@ const Index = () => {
       <section className="pt-32 lg:pt-40 pb-16 lg:pb-24 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <Badge 
-            variant="primary" 
-            size="md"
+            variant="default" 
             className={`mb-6 mx-auto animate-fade-in ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           >
             Find your perfect college hostel
@@ -150,8 +149,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <Badge 
-              variant="primary" 
-              size="md"
+              variant="default" 
               className="mb-4 mx-auto"
             >
               Features
@@ -219,8 +217,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <Badge 
-              variant="primary" 
-              size="md"
+              variant="default" 
               className="mb-4 mx-auto"
             >
               How It Works

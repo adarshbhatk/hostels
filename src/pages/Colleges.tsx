@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
@@ -40,7 +39,6 @@ const Colleges = () => {
           <div className="text-center mb-12">
             <Badge
               variant="default"
-              size="md"
               className="mb-4 mx-auto"
             >
               Browse Colleges

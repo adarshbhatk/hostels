@@ -27,7 +27,6 @@ const CollegeHeader = ({ college }: CollegeHeaderProps) => {
       
       <Badge
         variant="default"
-        size="md"
         className="mb-4"
       >
         Hostel Listings

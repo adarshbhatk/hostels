@@ -21,7 +21,7 @@ const HostelCard = ({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{hostel.name}</CardTitle>
-          <Badge variant={hostel.type === 'Boys' ? 'default' : hostel.type === 'Girls' ? 'secondary' : 'outline'} size="sm">
+          <Badge variant={hostel.type === 'Boys' ? 'default' : hostel.type === 'Girls' ? 'secondary' : 'outline'}>
             {hostel.type}
           </Badge>
         </div>

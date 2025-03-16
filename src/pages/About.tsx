@@ -63,8 +63,7 @@ const About = () => {
         <section className="py-16 px-6">
           <div className="max-w-7xl mx-auto text-center">
             <Badge 
-              variant="default" 
-              size="md"
+              variant="default"
               className="mb-6 mx-auto"
             >
               Our Story
@@ -88,8 +87,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <Badge 
-                variant="default" 
-                size="md"
+                variant="default"
                 className="mb-4 mx-auto"
               >
                 Our Mission
@@ -127,8 +125,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <Badge 
-                variant="default" 
-                size="md"
+                variant="default"
                 className="mb-4 mx-auto"
               >
                 Our Values
@@ -166,8 +163,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <Badge 
-                variant="default" 
-                size="md"
+                variant="default"
                 className="mb-4 mx-auto"
               >
                 Our Team
