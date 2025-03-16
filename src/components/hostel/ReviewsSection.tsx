@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ThumbsUp, Star, MessageSquare, Calendar } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ThumbsUp, Star, MessageSquare, Calendar, Image, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,6 +20,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface ReviewsSectionProps {
   reviews: Review[];
@@ -36,9 +37,23 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     foodRating: 0,
     content: '',
   });
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Handle redirection to login when non-authenticated user tries to add a review
+  const handleAddReviewClick = () => {
+    if (!user) {
+      navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname));
+    } else {
+      setShowAddReviewDialog(true);
+    }
+  };
   
   // Filter reviews based on active tab
   const filteredReviews = reviews.filter(review => {
@@ -87,10 +102,78 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     </div>
   );
   
+  // Handle photo upload
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    
+    const newFiles = Array.from(event.target.files);
+    setUploadedPhotos(prev => [...prev, ...newFiles]);
+    
+    // Create temporary URL for preview
+    const fileUrls = newFiles.map(file => URL.createObjectURL(file));
+    setPhotoUrls(prev => [...prev, ...fileUrls]);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  // Remove photo
+  const handleRemovePhoto = (index: number) => {
+    setUploadedPhotos(prev => prev.filter((_, i) => i !== index));
+    
+    // Revoke object URL to avoid memory leaks
+    URL.revokeObjectURL(photoUrls[index]);
+    setPhotoUrls(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Upload photos to Supabase storage
+  const uploadPhotosToStorage = async (): Promise<string[]> => {
+    if (uploadedPhotos.length === 0) return [];
+    
+    setIsUploading(true);
+    const uploadedUrls: string[] = [];
+    
+    try {
+      for (const photo of uploadedPhotos) {
+        const fileName = `${user!.id}_${Date.now()}_${photo.name}`;
+        
+        const { data, error } = await supabase.storage
+          .from('reviews-photos')
+          .upload(fileName, photo);
+        
+        if (error) throw error;
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('reviews-photos')
+          .getPublicUrl(data.path);
+        
+        uploadedUrls.push(urlData.publicUrl);
+      }
+      
+      return uploadedUrls;
+    } catch (error) {
+      console.error('Error uploading photos:', error);
+      toast({
+        title: 'Upload Error',
+        description: 'Failed to upload photos. Please try again.',
+        variant: 'destructive',
+      });
+      return [];
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
   // Add review mutation
   const addReviewMutation = useMutation({
     mutationFn: async (newReviewData: any) => {
       if (!user) throw new Error('You must be logged in to add a review');
+      
+      // Upload photos first
+      const photoUrls = await uploadPhotosToStorage();
       
       const { data, error } = await supabase
         .from('reviews')
@@ -101,7 +184,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
             rating: newReviewData.rating,
             food_rating: newReviewData.foodRating,
             content: newReviewData.content,
-            photos: [],
+            photos: photoUrls,
             upvotes: 0
           }
         ])
@@ -118,6 +201,8 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
       });
       setShowAddReviewDialog(false);
       setNewReview({ rating: 0, foodRating: 0, content: '' });
+      setUploadedPhotos([]);
+      setPhotoUrls([]);
     },
     onError: (error) => {
       toast({
@@ -163,6 +248,13 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     addReviewMutation.mutate(newReview);
   };
   
+  // Clean up object URLs when component unmounts
+  React.useEffect(() => {
+    return () => {
+      photoUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+  
   if (isLoading) {
     return <div className="space-y-4">
       <Skeleton className="h-32 w-full" />
@@ -177,66 +269,112 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-xl">Hostel Ratings</CardTitle>
-            {user && (
-              <Dialog open={showAddReviewDialog} onOpenChange={setShowAddReviewDialog}>
-                <DialogTrigger asChild>
-                  <Button className="bg-hostel-600 hover:bg-hostel-700 text-white">
-                    Add Review
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Add Your Review</DialogTitle>
-                    <DialogDescription>
-                      Share your experience at this hostel to help other students.
-                    </DialogDescription>
-                  </DialogHeader>
+            <Dialog open={showAddReviewDialog} onOpenChange={setShowAddReviewDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-hostel-600 hover:bg-hostel-700 text-white"
+                  onClick={handleAddReviewClick}
+                >
+                  Add Review
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Add Your Review</DialogTitle>
+                  <DialogDescription>
+                    Share your experience at this hostel to help other students.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <form onSubmit={handleAddReview} className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Overall Rating</label>
+                    <div className="flex items-center space-x-1">
+                      {renderStars(newReview.rating)}
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        {newReview.rating > 0 ? `${newReview.rating}/5` : 'Select rating'}
+                      </span>
+                    </div>
+                  </div>
                   
-                  <form onSubmit={handleAddReview} className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Overall Rating</label>
-                      <div className="flex items-center space-x-1">
-                        {renderStars(newReview.rating)}
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          {newReview.rating > 0 ? `${newReview.rating}/5` : 'Select rating'}
-                        </span>
-                      </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Food Rating</label>
+                    <div className="flex items-center space-x-1">
+                      {renderFoodStars(newReview.foodRating)}
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        {newReview.foodRating > 0 ? `${newReview.foodRating}/5` : 'Select rating'}
+                      </span>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Food Rating</label>
-                      <div className="flex items-center space-x-1">
-                        {renderFoodStars(newReview.foodRating)}
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          {newReview.foodRating > 0 ? `${newReview.foodRating}/5` : 'Select rating'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Your Review</label>
-                      <textarea 
-                        className="w-full min-h-[100px] p-2 border rounded-md"
-                        placeholder="Share your experience..."
-                        value={newReview.content}
-                        onChange={(e) => setNewReview({...newReview, content: e.target.value})}
-                        required
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Your Review</label>
+                    <textarea 
+                      className="w-full min-h-[100px] p-2 border rounded-md"
+                      placeholder="Share your experience..."
+                      value={newReview.content}
+                      onChange={(e) => setNewReview({...newReview, content: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Add Photos (Optional)</label>
+                    <div className="flex items-center">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handlePhotoUpload}
+                        accept="image/*"
+                        multiple
+                        className="hidden"
                       />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        <Image className="h-4 w-4 mr-2" />
+                        Choose Photos
+                      </Button>
                     </div>
                     
-                    <DialogFooter>
-                      <Button 
-                        type="submit" 
-                        className="bg-hostel-600 hover:bg-hostel-700 text-white"
-                        disabled={newReview.rating === 0 || newReview.foodRating === 0 || !newReview.content || addReviewMutation.isPending}
-                      >
-                        {addReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            )}
+                    {photoUrls.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {photoUrls.map((url, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={url}
+                              alt={`Preview ${index}`}
+                              className="w-20 h-20 object-cover rounded border"
+                            />
+                            <button
+                              type="button"
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                              onClick={() => handleRemovePhoto(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button 
+                      type="submit" 
+                      className="bg-hostel-600 hover:bg-hostel-700 text-white"
+                      disabled={newReview.rating === 0 || newReview.foodRating === 0 || !newReview.content || addReviewMutation.isPending || isUploading}
+                    >
+                      {addReviewMutation.isPending || isUploading ? 'Submitting...' : 'Submit Review'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
