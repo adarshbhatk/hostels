@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { ThumbsUp, Star, MessageSquare, Calendar, Image, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +20,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { MAX_FILE_SIZE } from '@/integrations/supabase/client';
 
 interface ReviewsSectionProps {
   reviews: Review[];
@@ -107,11 +107,37 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     if (!event.target.files || event.target.files.length === 0) return;
     
     const newFiles = Array.from(event.target.files);
-    setUploadedPhotos(prev => [...prev, ...newFiles]);
     
-    // Create temporary URL for preview
-    const fileUrls = newFiles.map(file => URL.createObjectURL(file));
-    setPhotoUrls(prev => [...prev, ...fileUrls]);
+    // Check for file size limit
+    const oversizedFiles = newFiles.filter(file => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "File size exceeded",
+        description: `${oversizedFiles.length > 1 ? 'Some files exceed' : 'File exceeds'} the maximum size of 5MB.`,
+        variant: "destructive",
+      });
+      
+      // Filter out oversized files
+      const validFiles = newFiles.filter(file => file.size <= MAX_FILE_SIZE);
+      if (validFiles.length === 0) {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
+      setUploadedPhotos(prev => [...prev, ...validFiles]);
+      
+      // Create temporary URL for preview
+      const fileUrls = validFiles.map(file => URL.createObjectURL(file));
+      setPhotoUrls(prev => [...prev, ...fileUrls]);
+    } else {
+      setUploadedPhotos(prev => [...prev, ...newFiles]);
+      
+      // Create temporary URL for preview
+      const fileUrls = newFiles.map(file => URL.createObjectURL(file));
+      setPhotoUrls(prev => [...prev, ...fileUrls]);
+    }
     
     // Reset file input
     if (fileInputRef.current) {
@@ -136,29 +162,64 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     const uploadedUrls: string[] = [];
     
     try {
+      // First, check if the bucket exists
+      const { data: buckets, error: bucketsError } = await supabase
+        .storage
+        .listBuckets();
+      
+      const bucketExists = buckets?.some(bucket => bucket.name === 'review-photos');
+      
+      if (bucketsError || !bucketExists) {
+        console.error('Storage bucket error:', bucketsError || 'Bucket "review-photos" does not exist');
+        toast({
+          title: "Storage Error",
+          description: "Could not access the storage system. Please try again later or contact support.",
+          variant: "destructive",
+        });
+        return [];
+      }
+      
       for (const photo of uploadedPhotos) {
+        // Check file size again before upload
+        if (photo.size > MAX_FILE_SIZE) {
+          console.warn(`Skipping file ${photo.name} as it exceeds 5MB limit`);
+          continue;
+        }
+        
         const fileName = `${user!.id}_${Date.now()}_${photo.name}`;
         
         const { data, error } = await supabase.storage
-          .from('reviews-photos')
+          .from('review-photos')
           .upload(fileName, photo);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error uploading photo:', error);
+          throw error;
+        }
         
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from('reviews-photos')
+          .from('review-photos')
           .getPublicUrl(data.path);
         
         uploadedUrls.push(urlData.publicUrl);
       }
       
       return uploadedUrls;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading photos:', error);
+      let errorMessage = 'Failed to upload photos. Please try again.';
+      
+      // Handle specific error cases
+      if (error.message?.includes('Bucket not found')) {
+        errorMessage = 'Storage system is not properly configured. Please contact support.';
+      } else if (error.message?.includes('size limit')) {
+        errorMessage = 'One or more files exceed the 5MB size limit.';
+      }
+      
       toast({
         title: 'Upload Error',
-        description: 'Failed to upload photos. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
       return [];
