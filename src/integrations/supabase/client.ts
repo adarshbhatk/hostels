@@ -11,5 +11,25 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+// Check and create review-photos bucket if it doesn't exist
+const initStorage = async () => {
+  try {
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === 'review-photos');
+    
+    if (!bucketExists) {
+      console.log('Creating review-photos bucket');
+      // Note: This operation requires more privileges than the anon key has
+      // This should be handled server-side, but we're logging it for debugging
+      console.error('Bucket "review-photos" does not exist. Please create it in the Supabase dashboard.');
+    }
+  } catch (error) {
+    console.error('Error checking storage buckets:', error);
+  }
+};
+
+// Call initialization function
+initStorage();
+
 // Maximum file size in bytes (5 MB)
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

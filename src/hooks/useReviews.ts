@@ -31,6 +31,8 @@ export const useReviews = (hostelId: string) => {
         throw error;
       }
       
+      console.log('Raw reviews data:', data);
+      
       // Map the data to include the user information from profiles
       const reviews = data.map(review => {
         // Safely handle profiles data which might be null or an error object
@@ -45,8 +47,13 @@ export const useReviews = (hostelId: string) => {
           use_alias_for_reviews: profileData.use_alias_for_reviews
         } : undefined;
         
+        // Ensure photos are properly handled
+        const photos = Array.isArray(review.photos) ? review.photos : [];
+        console.log(`Review ${review.id} has ${photos.length} photos:`, photos);
+        
         return {
           ...review,
+          photos,
           user
         };
       });

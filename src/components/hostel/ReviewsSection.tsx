@@ -167,6 +167,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
         .storage
         .listBuckets();
       
+      console.log('Available buckets:', buckets);
       const bucketExists = buckets?.some(bucket => bucket.name === 'review-photos');
       
       if (bucketsError || !bucketExists) {
@@ -186,7 +187,8 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
           continue;
         }
         
-        const fileName = `${user!.id}_${Date.now()}_${photo.name}`;
+        const fileName = `${user!.id}_${Date.now()}_${photo.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        console.log(`Attempting to upload: ${fileName}`);
         
         const { data, error } = await supabase.storage
           .from('review-photos')
@@ -197,14 +199,18 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
           throw error;
         }
         
+        console.log('Upload successful, path:', data.path);
+        
         // Get public URL
         const { data: urlData } = supabase.storage
           .from('review-photos')
           .getPublicUrl(data.path);
         
+        console.log('Public URL:', urlData.publicUrl);
         uploadedUrls.push(urlData.publicUrl);
       }
       
+      console.log('All uploads completed, URLs:', uploadedUrls);
       return uploadedUrls;
     } catch (error: any) {
       console.error('Error uploading photos:', error);
@@ -609,7 +615,8 @@ const ReviewCard = ({ review, onUpvote, isUpvoting }: ReviewCardProps) => {
                 key={index}
                 src={photo}
                 alt={`Review photo ${index + 1}`}
-                className="w-20 h-20 object-cover rounded"
+                className="w-20 h-20 object-cover rounded border border-gray-200 hover:w-auto hover:h-auto hover:max-w-xs hover:max-h-64 hover:z-10 hover:absolute hover:shadow-xl transition-all duration-200"
+                onClick={() => window.open(photo, '_blank')}
               />
             ))}
           </div>
