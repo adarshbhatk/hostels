@@ -5,6 +5,7 @@ export interface College {
   location: string;
   created_at: string;
   updated_at: string;
+  status: 'pending' | 'approved';
   hostelCount?: number;
 }
 
@@ -25,6 +26,7 @@ export interface Hostel {
   warden_name: string;
   warden_phone: string;
   warden_email: string;
+  status: 'pending' | 'approved';
   created_at: string;
   updated_at: string;
 }

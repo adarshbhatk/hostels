@@ -7,6 +7,7 @@ import HostelCard from '@/components/hostel/HostelCard';
 import HostelFilters from '@/components/hostel/HostelFilters';
 import EmptyState from '@/components/hostel/EmptyState';
 import CollegeHeader from '@/components/hostel/CollegeHeader';
+import HostelSubmitForm from '@/components/hostel/HostelSubmitForm';
 import { useColleges } from '@/hooks/useColleges';
 import { useHostels } from '@/hooks/useHostels';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -178,6 +179,13 @@ const HostelListing = () => {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
+          )}
+          
+          {/* Hostel Submission Form */}
+          {collegeId && !isCollegeLoading && college && (
+            <div className="max-w-lg mx-auto mt-12 text-center">
+              <HostelSubmitForm collegeId={collegeId} />
+            </div>
           )}
         </div>
       </main>

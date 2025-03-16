@@ -15,6 +15,7 @@ export type Database = {
           id: string
           location: string
           name: string
+          status: string
           updated_at: string
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           id?: string
           location: string
           name: string
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           id?: string
           location?: string
           name?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -48,6 +51,7 @@ export type Database = {
           photos: string[]
           rating: number | null
           rent: string
+          status: string
           type: string
           updated_at: string
           warden_email: string
@@ -68,6 +72,7 @@ export type Database = {
           photos?: string[]
           rating?: number | null
           rent: string
+          status?: string
           type: string
           updated_at?: string
           warden_email: string
@@ -88,6 +93,7 @@ export type Database = {
           photos?: string[]
           rating?: number | null
           rent?: string
+          status?: string
           type?: string
           updated_at?: string
           warden_email?: string

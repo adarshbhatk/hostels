@@ -28,11 +28,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash } from 'lucide-react';
+import { Plus, Pencil, Trash, Check, X } from 'lucide-react';
 import { College } from '@/types';
 import CollegeForm from './CollegeForm';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/Badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const CollegesAdmin = () => {
   const { toast } = useToast();
@@ -41,27 +43,36 @@ const CollegesAdmin = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCollege, setCurrentCollege] = useState<College | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   // Fetch colleges
   const { data: colleges, isLoading, error } = useQuery({
-    queryKey: ['colleges'],
+    queryKey: ['colleges', 'admin'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
-        .order('name');
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data as College[];
     },
   });
 
+  // Filter colleges based on active tab
+  const filteredColleges = colleges?.filter(college => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'pending') return college.status === 'pending';
+    if (activeTab === 'approved') return college.status === 'approved';
+    return true;
+  });
+
   // Add college mutation
   const addCollegeMutation = useMutation({
-    mutationFn: async (newCollege: Omit<College, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (newCollege: Omit<College, 'id' | 'created_at' | 'updated_at' | 'status'>) => {
       const { data, error } = await supabase
         .from('colleges')
-        .insert(newCollege)
+        .insert({ ...newCollege, status: 'approved' })
         .select()
         .single();
       
@@ -145,9 +156,37 @@ const CollegesAdmin = () => {
     },
   });
 
-  // Handle form submissions
+  // Approve college mutation
+  const approveCollegeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('colleges')
+        .update({ status: 'approved' })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['colleges'] });
+      toast({
+        title: 'College Approved',
+        description: 'The college has been approved successfully.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to approve college: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
 
-  const handleAddSubmit = (data: Omit<College, 'id' | 'created_at' | 'updated_at'>) => {
+  // Handle form submissions
+  const handleAddSubmit = (data: Omit<College, 'id' | 'created_at' | 'updated_at' | 'status'>) => {
     console.log("Submitting college data:", data);
     addCollegeMutation.mutate(data, {
       onError: (error) => {
@@ -156,7 +195,7 @@ const CollegesAdmin = () => {
     });
   };
 
-  const handleEditSubmit = (data: Omit<College, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleEditSubmit = (data: Omit<College, 'id' | 'created_at' | 'updated_at' | 'status'>) => {
     if (currentCollege) {
       updateCollegeMutation.mutate({
         id: currentCollege.id,
@@ -169,6 +208,10 @@ const CollegesAdmin = () => {
     if (currentCollege) {
       deleteCollegeMutation.mutate(currentCollege.id);
     }
+  };
+
+  const handleApprove = (college: College) => {
+    approveCollegeMutation.mutate(college.id);
   };
 
   // Open edit dialog
@@ -205,59 +248,94 @@ const CollegesAdmin = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead className="w-[160px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Colleges</TabsTrigger>
+          <TabsTrigger value="pending">
+            Pending
+            {colleges?.filter(c => c.status === 'pending').length > 0 && (
+              <Badge variant="default" className="ml-2">
+                {colleges?.filter(c => c.status === 'pending').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
+        </TabsList>
+
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8">
-                    Loading colleges...
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[200px]">Actions</TableHead>
                 </TableRow>
-              ) : colleges && colleges.length > 0 ? (
-                colleges.map((college) => (
-                  <TableRow key={college.id}>
-                    <TableCell className="font-medium">{college.name}</TableCell>
-                    <TableCell>{college.location}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(college)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => openDeleteDialog(college)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      Loading colleges...
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8">
-                    No colleges found. Add a college to get started.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ) : filteredColleges && filteredColleges.length > 0 ? (
+                  filteredColleges.map((college) => (
+                    <TableRow key={college.id}>
+                      <TableCell className="font-medium">{college.name}</TableCell>
+                      <TableCell>{college.location}</TableCell>
+                      <TableCell>
+                        <Badge variant={college.status === 'approved' ? 'default' : 'secondary'}>
+                          {college.status === 'approved' ? 'Approved' : 'Pending'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {college.status === 'pending' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleApprove(college)}
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(college)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openDeleteDialog(college)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      {activeTab === 'pending' 
+                        ? 'No pending colleges found.' 
+                        : activeTab === 'approved'
+                          ? 'No approved colleges found.'
+                          : 'No colleges found. Add a college to get started.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </Tabs>
 
       {/* Add College Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

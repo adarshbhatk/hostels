@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { useColleges } from '@/hooks/useColleges';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import CollegeSubmitForm from '@/components/college/CollegeSubmitForm';
 
 const Colleges = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,6 +142,11 @@ const Colleges = () => {
               </p>
             </div>
           )}
+          
+          {/* College Submission Form */}
+          <div className="max-w-lg mx-auto mt-12 text-center">
+            <CollegeSubmitForm />
+          </div>
         </div>
       </main>
       
