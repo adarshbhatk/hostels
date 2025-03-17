@@ -91,7 +91,7 @@ students who lived there</span>
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="min-w-[180px]">
-              <Link to="/auth?tab=signup">
+            <Link to={user ? '/colleges' : '/auth?tab=signup'}>
                 Write a Review
               </Link>
             </Button>
