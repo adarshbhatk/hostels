@@ -8,9 +8,12 @@ import { Badge } from "@/components/ui/Badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useAuth } from '@/context/AuthContext';
 
 const Reviews = () => {
   const [reviews, setReviews] = useState<any[]>([]);
+
+  const { user } = useAuth();
 
   const { data: reviewsData, error, isLoading } = useQuery({
     queryKey: ['reviews'],
@@ -24,7 +27,7 @@ const Reviews = () => {
             alias_name,
             use_alias_for_reviews
           )
-        `);
+        `).eq('user_id', user?.id);
 
       if (error) {
         console.error('Error fetching reviews:', error);
@@ -79,6 +82,13 @@ const Reviews = () => {
                 </CardHeader>
                 <CardContent>
                   <p>{review.content}</p>
+                  {review.photos && review.photos.length > 0 && (
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+    {review.photos.map((photo) => (
+      <img key={photo} src={photo} alt="Review" className="rounded-lg w-full max-h-64 object-cover" />
+    ))}
+  </div>
+)}
                   <div className="mt-2">
                     <Badge>Rating: {review.rating}</Badge>
                     <Badge className="ml-2">Food Rating: {review.food_rating}</Badge>
