@@ -11,16 +11,32 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Check and create review-photos bucket if it doesn't exist
+// Check and verify access to review-photos bucket
 const initStorage = async () => {
   try {
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets, error } = await supabase.storage.listBuckets();
+    
+    if (error) {
+      console.error('Error checking storage buckets:', error);
+      return;
+    }
+    
     const bucketExists = buckets?.some(bucket => bucket.name === 'review-photos');
     
-    if (!bucketExists) {
-      console.log('Creating review-photos bucket');
-      // Note: This operation requires more privileges than the anon key has
-      // This should be handled server-side, but we're logging it for debugging
+    if (bucketExists) {
+      console.log('review-photos bucket exists');
+      
+      // Test access to the bucket
+      const { data: files, error: filesError } = await supabase.storage
+        .from('review-photos')
+        .list();
+        
+      if (filesError) {
+        console.error('Error accessing review-photos bucket:', filesError);
+      } else {
+        console.log(`review-photos bucket accessible, contains ${files.length} files`);
+      }
+    } else {
       console.error('Bucket "review-photos" does not exist. Please create it in the Supabase dashboard.');
     }
   } catch (error) {
