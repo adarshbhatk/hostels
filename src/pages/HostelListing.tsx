@@ -10,6 +10,7 @@ import CollegeHeader from '@/components/hostel/CollegeHeader';
 import HostelSubmitForm from '@/components/hostel/HostelSubmitForm';
 import { useColleges } from '@/hooks/useColleges';
 import { useHostels } from '@/hooks/useHostels';
+import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Pagination,
@@ -23,6 +24,7 @@ import {
 const HostelListing = () => {
   const { collegeId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,11 +41,16 @@ const HostelListing = () => {
     error: hostelsError 
   } = useHostels(collegeId || '', searchTerm, activeFilter);
   
+  // Filter out pending hostels for regular users
+  const visibleHostels = hostels ? hostels.filter(hostel => 
+    hostel.status === 'approved' || user
+  ) : [];
+  
   // Calculate pagination
   const indexOfLastHostel = currentPage * hostelsPerPage;
   const indexOfFirstHostel = indexOfLastHostel - hostelsPerPage;
-  const currentHostels = hostels ? hostels.slice(indexOfFirstHostel, indexOfLastHostel) : [];
-  const totalPages = hostels ? Math.ceil(hostels.length / hostelsPerPage) : 0;
+  const currentHostels = visibleHostels.slice(indexOfFirstHostel, indexOfLastHostel);
+  const totalPages = Math.ceil(visibleHostels.length / hostelsPerPage);
   
   // Handler to clear filters
   const handleClearFilters = () => {
@@ -145,12 +152,12 @@ const HostelListing = () => {
           )}
           
           {/* Empty State */}
-          {!isHostelsLoading && !hostelsError && hostels && hostels.length === 0 && (
+          {!isHostelsLoading && !hostelsError && visibleHostels.length === 0 && (
             <EmptyState onClearFilters={handleClearFilters} />
           )}
           
           {/* Pagination */}
-          {!isHostelsLoading && !hostelsError && hostels && hostels.length > 0 && (
+          {!isHostelsLoading && !hostelsError && visibleHostels.length > 0 && (
             <Pagination>
               <PaginationContent>
                 <PaginationItem>

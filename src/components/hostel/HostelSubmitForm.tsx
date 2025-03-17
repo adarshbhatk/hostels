@@ -40,7 +40,7 @@ const hostelSchema = z.object({
   type: z.string().min(1, 'Hostel type is required'),
   location: z.string().min(2, 'Location must be at least 2 characters'),
   distance: z.string().min(1, 'Distance is required'),
-  capacity: z.string().transform(val => parseInt(val, 10)),
+  capacity: z.coerce.number().min(1, 'Capacity must be at least 1'),
   rent: z.string().min(1, 'Rent information is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   amenities: z.string().transform(val => 
@@ -74,11 +74,11 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
       type: '',
       location: '',
       distance: '',
-      capacity: '',
+      capacity: 0,
       rent: '',
       description: '',
       amenities: '',
-      mess_food: '',
+      mess_food: 'Veg' as const,
       warden_name: '',
       warden_phone: '',
       warden_email: '',
@@ -118,12 +118,13 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
       if (error) throw error;
 
       toast({
-        title: 'Hostel submitted',
-        description: 'Your hostel has been submitted for review and will be published once approved.',
+        title: 'Hostel submitted for approval',
+        description: 'Thank you! Your hostel has been submitted and will be visible after admin approval.',
       });
 
       form.reset();
       setIsOpen(false);
+      // Still invalidate the query to ensure lists are refreshed for admins
       queryClient.invalidateQueries({ queryKey: ['hostels', collegeId] });
     } catch (error) {
       console.error('Error submitting hostel:', error);
@@ -148,7 +149,7 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
         <DialogHeader>
           <DialogTitle>Submit a New Hostel</DialogTitle>
           <DialogDescription>
-            Fill in the details below to submit a new hostel. It will be published after review.
+            Fill in the details below to submit a new hostel. It will be published after admin review.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -231,7 +232,12 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
                   <FormItem>
                     <FormLabel>Capacity</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Number of beds" {...field} />
+                      <Input 
+                        type="number" 
+                        placeholder="Number of beds" 
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -295,25 +301,25 @@ const HostelSubmitForm = ({ collegeId }: HostelSubmitFormProps) => {
               control={form.control}
               name="mess_food"
               render={({ field }) => (
-    <FormItem>
-      <FormLabel>Mess Food</FormLabel>
-      <Select 
-        onValueChange={field.onChange} 
-        defaultValue={field.value}
-      >
-        <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder="Select mess food option" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent>
-          <SelectItem value="Veg">Veg</SelectItem>
-          <SelectItem value="Non-veg">Non-veg</SelectItem>
-          <SelectItem value="Both">Both</SelectItem>
-        </SelectContent>
-      </Select>
-      <FormMessage />
-    </FormItem>
+                <FormItem>
+                  <FormLabel>Mess Food</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select mess food option" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Veg">Veg</SelectItem>
+                      <SelectItem value="Non-veg">Non-veg</SelectItem>
+                      <SelectItem value="Both">Both</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             
