@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Review } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/Badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 const Reviews = () => {
@@ -50,7 +51,7 @@ const Reviews = () => {
   return (
     <ScrollArea className="w-full space-y-4">
       {reviews.map((review) => {
-        const user_data = review.user;
+        const user_data = review.profiles;
 
         // Fix the type errors in the component
         const profile = user_data && typeof user_data === 'object' 
