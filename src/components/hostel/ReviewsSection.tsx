@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { ThumbsUp, Star, MessageSquare, Calendar, Image, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -106,8 +105,8 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     </div>
   );
   
-  // Handle photo upload
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle photo upload - completely rewritten
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
     
     const newFiles = Array.from(event.target.files);
@@ -158,103 +157,94 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     setPhotoUrls(prev => prev.filter((_, i) => i !== index));
   };
   
-  // Upload photos to Supabase storage
+  // Upload photos to Supabase storage - completely rewritten
   const uploadPhotosToStorage = async (): Promise<string[]> => {
-    if (uploadedPhotos.length === 0) return [];
+    if (!uploadedPhotos.length) return [];
     
     setIsUploading(true);
     const uploadedUrls: string[] = [];
     
     try {
-      // First, check if the bucket exists
-      const { data: buckets, error: bucketsError } = await supabase
-        .storage
-        .listBuckets();
+      console.log(`Starting upload of ${uploadedPhotos.length} photos`);
       
-      console.log('Available buckets:', buckets);
-      const bucketExists = buckets?.some(bucket => bucket.name === 'review-photos');
-      
-      if (bucketsError || !bucketExists) {
-        console.error('Storage bucket error:', bucketsError || 'Bucket "review-photos" does not exist');
-        toast({
-          title: "Storage Error",
-          description: "Could not access the storage system. Please try again later or contact support.",
-          variant: "destructive",
-        });
-        return [];
-      }
-      
-      for (const photo of uploadedPhotos) {
+      for (const [index, photo] of uploadedPhotos.entries()) {
+        console.log(`Processing photo ${index + 1}/${uploadedPhotos.length}: ${photo.name} (${photo.size} bytes)`);
+        
         // Check file size again before upload
         if (photo.size > MAX_FILE_SIZE) {
           console.warn(`Skipping file ${photo.name} as it exceeds 5MB limit`);
           continue;
         }
         
-        const fileName = `${user!.id}_${Date.now()}_${photo.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        console.log(`Attempting to upload: ${fileName}`);
+        // Create a unique filename to avoid collisions
+        const fileExt = photo.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `${user!.id}/${fileName}`;
+        
+        console.log(`Uploading to path: ${filePath}`);
         
         const { data, error } = await supabase.storage
           .from('review-photos')
-          .upload(fileName, photo);
+          .upload(filePath, photo, {
+            cacheControl: '3600',
+            upsert: false
+          });
         
         if (error) {
-          console.error('Error uploading photo:', error);
-          throw error;
+          console.error('Upload error:', error);
+          throw new Error(`Failed to upload ${photo.name}: ${error.message}`);
         }
         
-        console.log('Upload successful, path:', data.path);
+        console.log('Upload successful, data:', data);
         
         // Get public URL
-        const { data: urlData } = supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from('review-photos')
-          .getPublicUrl(data.path);
+          .getPublicUrl(filePath);
         
-        console.log('Public URL:', urlData.publicUrl);
-        uploadedUrls.push(urlData.publicUrl);
+        console.log('Generated public URL:', publicUrlData.publicUrl);
+        uploadedUrls.push(publicUrlData.publicUrl);
       }
       
-      console.log('All uploads completed, URLs:', uploadedUrls);
+      console.log(`Successfully uploaded ${uploadedUrls.length} photos`);
       return uploadedUrls;
-    } catch (error: any) {
-      console.error('Error uploading photos:', error);
-      let errorMessage = 'Failed to upload photos. Please try again.';
+    } catch (error) {
+      console.error('Error in uploadPhotosToStorage:', error);
       
-      // Handle specific error cases
-      if (error.message?.includes('Bucket not found')) {
-        errorMessage = 'Storage system is not properly configured. Please contact support.';
-      } else if (error.message?.includes('size limit')) {
-        errorMessage = 'One or more files exceed the 5MB size limit.';
-      }
-      
+      // Show user-friendly error
       toast({
-        title: 'Upload Error',
-        description: errorMessage,
+        title: 'Upload Failed',
+        description: error instanceof Error ? error.message : 'Failed to upload photos. Please try again.',
         variant: 'destructive',
       });
+      
       return [];
     } finally {
       setIsUploading(false);
     }
   };
   
-  // Add review mutation
+  // Add review mutation - updated to handle the new photo upload logic
   const addReviewMutation = useMutation({
-    mutationFn: async (newReviewData: any) => {
+    mutationFn: async (reviewData: typeof newReview) => {
       if (!user) throw new Error('You must be logged in to add a review');
+      
+      console.log('Starting review submission process');
       
       // Upload photos first
       const photoUrls = await uploadPhotosToStorage();
+      console.log(`Received ${photoUrls.length} photo URLs after upload`);
       
+      // Create review in database
       const { data, error } = await supabase
         .from('reviews')
         .insert([
           {
             hostel_id: hostelId,
             user_id: user.id,
-            rating: newReviewData.rating,
-            food_rating: newReviewData.foodRating,
-            content: newReviewData.content,
+            rating: reviewData.rating,
+            food_rating: reviewData.foodRating,
+            content: reviewData.content,
             photos: photoUrls,
             upvotes: 0,
             status: 'pending' // All new reviews are pending by default
@@ -262,7 +252,12 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
         ])
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting review:', error);
+        throw error;
+      }
+      
+      console.log('Review created successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -277,9 +272,10 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
       setPhotoUrls([]);
     },
     onError: (error) => {
+      console.error('Review submission error:', error);
       toast({
         title: 'Error',
-        description: `Failed to add review: ${error.message}`,
+        description: `Failed to add review: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     }
@@ -308,7 +304,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     onError: (error) => {
       toast({
         title: 'Error',
-        description: `Failed to upvote review: ${error.message}`,
+        description: `Failed to upvote review: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     }
@@ -317,6 +313,17 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
   // Handle review submission
   const handleAddReview = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (newReview.rating === 0 || newReview.foodRating === 0 || !newReview.content) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields (rating, food rating, and review content).',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    console.log('Submitting review:', newReview, `with ${uploadedPhotos.length} photos`);
     addReviewMutation.mutate(newReview);
   };
   
@@ -325,7 +332,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
     return () => {
       photoUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, []);
+  }, [photoUrls]);
   
   // Show loading state
   if (isLoading) {
@@ -418,6 +425,9 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
                         <Image className="h-4 w-4 mr-2" />
                         Choose Photos
                       </Button>
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        Maximum 5MB per image
+                      </span>
                     </div>
                     
                     {photoUrls.length > 0 && (
@@ -559,6 +569,7 @@ const ReviewsSection = ({ reviews, isLoading, hostelId }: ReviewsSectionProps) =
   );
 };
 
+// Keep the ReviewCard component the same
 interface ReviewCardProps {
   review: Review;
   onUpvote: () => void;
@@ -636,7 +647,7 @@ const ReviewCard = ({ review, onUpvote, isUpvoting }: ReviewCardProps) => {
                 key={index}
                 src={photo}
                 alt={`Review photo ${index + 1}`}
-                className="w-20 h-20 object-cover rounded border border-gray-200 hover:w-auto hover:h-auto hover:max-w-xs hover:max-h-64 hover:z-10 hover:absolute hover:shadow-xl transition-all duration-200"
+                className="w-20 h-20 object-cover rounded border border-gray-200 hover:w-auto hover:h-auto hover:max-w-xs hover:max-h-64 hover:z-10 hover:absolute hover:shadow-xl transition-all duration-200 cursor-pointer"
                 onClick={() => window.open(photo, '_blank')}
               />
             ))}

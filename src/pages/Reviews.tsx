@@ -50,12 +50,13 @@ const Reviews = () => {
               ...review,
               photos,
               hostelName,
+              status: review.status as "approved" | "pending",
               user: {
                 full_name: profileData.full_name || '',
                 alias_name: profileData.alias_name || null,
                 use_alias_for_reviews: profileData.use_alias_for_reviews || false
               }
-            };
+            } as Review;
           });
           
           setReviews(processedReviews);
@@ -179,7 +180,6 @@ const Reviews = () => {
       <Footer />
     </div>
   );
-  
 };
 
 export default Reviews;

@@ -11,13 +11,17 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Check and verify access to review-photos bucket
-const initStorage = async () => {
+// Maximum file size in bytes (5 MB)
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+// Initialize and check storage bucket
+export const initStorage = async () => {
   try {
-    const { data: buckets, error } = await supabase.storage.listBuckets();
+    // Check if the review-photos bucket exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
-    if (error) {
-      console.error('Error checking storage buckets:', error);
+    if (bucketsError) {
+      console.error('Error checking storage buckets:', bucketsError);
       return;
     }
     
@@ -46,6 +50,3 @@ const initStorage = async () => {
 
 // Call initialization function
 initStorage();
-
-// Maximum file size in bytes (5 MB)
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

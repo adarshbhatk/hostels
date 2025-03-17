@@ -15,6 +15,8 @@ export const useReviews = (hostelId: string, includeNotApproved: boolean = false
     queryFn: async (): Promise<Review[]> => {
       // If we're including not approved reviews, we're likely an admin
       // The RLS policies will handle access control
+      const statusCondition = includeNotApproved ? {} : { status: 'approved' };
+      
       const query = supabase
         .from('reviews')
         .select(`
@@ -27,6 +29,11 @@ export const useReviews = (hostelId: string, includeNotApproved: boolean = false
         `)
         .eq('hostel_id', hostelId)
         .order('created_at', { ascending: false });
+      
+      // Add status filter if needed
+      if (!includeNotApproved) {
+        query.eq('status', 'approved');
+      }
       
       const { data, error } = await query;
       
@@ -42,14 +49,14 @@ export const useReviews = (hostelId: string, includeNotApproved: boolean = false
         // Safely handle profiles data which might be null or an error object
         const profileData = review.profiles && typeof review.profiles === 'object' 
           ? review.profiles as ProfileData
-          : null;
+          : {};
           
         // Create a properly typed user object from the profile data
-        const user = profileData ? {
-          full_name: profileData.full_name,
-          alias_name: profileData.alias_name,
-          use_alias_for_reviews: profileData.use_alias_for_reviews
-        } : undefined;
+        const user = {
+          full_name: profileData.full_name || '',
+          alias_name: profileData.alias_name || null,
+          use_alias_for_reviews: profileData.use_alias_for_reviews || false
+        };
         
         // Ensure photos are properly handled
         const photos = Array.isArray(review.photos) ? review.photos : [];
@@ -58,11 +65,12 @@ export const useReviews = (hostelId: string, includeNotApproved: boolean = false
         return {
           ...review,
           photos,
-          user
-        };
+          user,
+          status: review.status as "approved" | "pending"
+        } as Review;
       });
       
-      return reviews as Review[];
+      return reviews;
     },
     enabled: !!hostelId,
   });
@@ -97,14 +105,14 @@ export const usePendingReviews = () => {
         // Safely handle profiles data
         const profileData = review.profiles && typeof review.profiles === 'object' 
           ? review.profiles as ProfileData
-          : null;
+          : {};
           
         // Create a properly typed user object from the profile data
-        const user = profileData ? {
-          full_name: profileData.full_name,
-          alias_name: profileData.alias_name,
-          use_alias_for_reviews: profileData.use_alias_for_reviews
-        } : undefined;
+        const user = {
+          full_name: profileData.full_name || '',
+          alias_name: profileData.alias_name || null,
+          use_alias_for_reviews: profileData.use_alias_for_reviews || false
+        };
         
         // Ensure photos are properly handled
         const photos = Array.isArray(review.photos) ? review.photos : [];
@@ -116,8 +124,9 @@ export const usePendingReviews = () => {
           ...review,
           photos,
           user,
-          hostelName
-        };
+          hostelName,
+          status: review.status as "approved" | "pending"
+        } as Review;
       });
       
       return reviews;
