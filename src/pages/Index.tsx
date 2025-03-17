@@ -49,16 +49,16 @@ const Index = () => {
     description: 'All reviews are moderated to ensure accuracy and respectfulness.'
   }];
   const metrics = [{
-    value: '50+',
+    value: '10+',
     label: 'Colleges'
   }, {
-    value: '200+',
+    value: '20+',
     label: 'Hostels'
   }, {
-    value: '1,000+',
+    value: '50+',
     label: 'Reviews'
   }, {
-    value: '10,000+',
+    value: '100+',
     label: 'Students Helped'
   }];
   const {
