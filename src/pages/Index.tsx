@@ -8,7 +8,6 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useColleges } from '@/hooks/useColleges';
 import { useAuth } from '@/context/AuthContext';
-
 const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const {
@@ -62,9 +61,9 @@ const Index = () => {
     value: '10,000+',
     label: 'Students Helped'
   }];
-
-  const { user } = useAuth();
-
+  const {
+    user
+  } = useAuth();
   return <div className="min-h-screen flex flex-col">
       <Header />
       
@@ -78,8 +77,7 @@ const Index = () => {
           <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight lg:leading-tight max-w-4xl mx-auto animate-fade-up ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             Honest hostel reviews from{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-hostel-700 to-hostel-500">
-              students who lived there
-            </span>
+students who lived there</span>
           </h1>
           
           <p className={`mt-6 text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-up ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -235,7 +233,7 @@ const Index = () => {
                 <Link to={user ? "/colleges" : "/auth?tab=signup"} className="inline-flex items-center">
   Get Started
   <ArrowRight className="ml-2 h-5 w-5" />
-</Link>
+                </Link>
                 </Button>
               </div>
             </div>
@@ -246,5 +244,4 @@ const Index = () => {
       <Footer />
     </div>;
 };
-
 export default Index;
