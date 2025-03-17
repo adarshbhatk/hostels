@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
@@ -108,6 +107,7 @@ const AuthForm = () => {
     setIsSubmitting(true);
     
     try {
+      // Updated to explicitly pass the user metadata for alias and preference
       const { data, error } = await supabase.auth.signUp({
         email: signupData.email,
         password: signupData.password,
@@ -120,13 +120,21 @@ const AuthForm = () => {
         }
       });
       
-      if (error) {
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
+      // If signup is successful but we need to ensure the profile data is correctly saved
+      if (!error && data.user) {
+        // Additional profile update to ensure alias and preference are saved
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            alias_name: signupData.aliasName || null,
+            use_alias_for_reviews: signupData.useAliasForReviews
+          })
+          .eq('id', data.user.id);
+          
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+        }
+        
         toast({
           title: "Account created",
           description: data.user?.identities?.length === 0 
@@ -137,6 +145,12 @@ const AuthForm = () => {
         if (data.user?.identities?.length === 0) {
           setCurrentTab('signin');
         }
+      } else if (error) {
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive"
+        });
       }
     } catch (error: any) {
       toast({
