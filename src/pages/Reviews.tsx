@@ -2,14 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Review } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/Badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/Badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Reviews = () => {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   const { data: reviewsData, error, isLoading } = useQuery({
     queryKey: ['reviews'],
@@ -30,8 +29,8 @@ const Reviews = () => {
         throw error;
       }
 
-      return data as Review[];
-    },
+      return data;
+    }
   });
 
   useEffect(() => {
@@ -45,29 +44,20 @@ const Reviews = () => {
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>;
+    return <div>Error: {(error as Error).message}</div>;
   }
 
   return (
     <ScrollArea className="w-full space-y-4">
       {reviews.map((review) => {
-        const user_data = review.profiles;
-
-        // Fix the type errors in the component
-        const profile = user_data && typeof user_data === 'object' 
-          ? {
-              full_name: user_data.full_name || '',
-              alias_name: user_data.alias_name || null,
-              use_alias_for_reviews: user_data.use_alias_for_reviews || false
-            }
-          : {
-              full_name: '',
-              alias_name: null,
-              use_alias_for_reviews: false
-            };
-
-        const displayName = profile.use_alias_for_reviews && profile.alias_name
-          ? profile.alias_name
+        const profile = review.profiles || { 
+          full_name: '', 
+          alias_name: null, 
+          use_alias_for_reviews: false 
+        };
+        
+        const displayName = profile.use_alias_for_reviews && profile.alias_name 
+          ? profile.alias_name 
           : profile.full_name;
 
         return (

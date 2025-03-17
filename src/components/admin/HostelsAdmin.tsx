@@ -24,11 +24,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash } from 'lucide-react';
+import { Plus, Pencil, Trash, Check } from 'lucide-react';
 import { Hostel, College } from '@/types';
 import HostelForm from './HostelForm';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/Badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const HostelsAdmin = () => {
   const { toast } = useToast();
@@ -37,6 +39,7 @@ const HostelsAdmin = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentHostel, setCurrentHostel] = useState<Hostel | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   // Fetch colleges for dropdown
   const { data: colleges = [] } = useQuery({
@@ -54,7 +57,7 @@ const HostelsAdmin = () => {
 
   // Fetch hostels
   const { data: hostels, isLoading, error } = useQuery({
-    queryKey: ['hostels'],
+    queryKey: ['hostels', 'admin'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hostels')
@@ -62,11 +65,19 @@ const HostelsAdmin = () => {
           *,
           colleges:college_id (name)
         `)
-        .order('name');
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data as (Hostel & { colleges: { name: string } })[];
     },
+  });
+
+  // Filter hostels based on active tab
+  const filteredHostels = hostels?.filter(hostel => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'pending') return hostel.status === 'pending';
+    if (activeTab === 'approved') return hostel.status === 'approved';
+    return true;
   });
 
   // Add hostel mutation
@@ -158,6 +169,35 @@ const HostelsAdmin = () => {
     },
   });
 
+  // Approve hostel mutation
+  const approveHostelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('hostels')
+        .update({ status: 'approved' })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hostels'] });
+      toast({
+        title: 'Hostel Approved',
+        description: 'The hostel has been approved successfully.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to approve hostel: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Handle form submissions
   const handleAddSubmit = (data: Omit<Hostel, 'id' | 'created_at' | 'updated_at' | 'rating'>) => {
     addHostelMutation.mutate(data);
@@ -176,6 +216,10 @@ const HostelsAdmin = () => {
     if (currentHostel) {
       deleteHostelMutation.mutate(currentHostel.id);
     }
+  };
+
+  const handleApprove = (hostel: Hostel) => {
+    approveHostelMutation.mutate(hostel.id);
   };
 
   // Open edit dialog
@@ -212,63 +256,96 @@ const HostelsAdmin = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>College</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead className="w-[160px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All Hostels</TabsTrigger>
+          <TabsTrigger value="pending">
+            Pending
+            {hostels?.filter(h => h.status === 'pending').length > 0 && (
+              <Badge variant="default" className="ml-2">
+                {hostels?.filter(h => h.status === 'pending').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
+        </TabsList>
+
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    Loading hostels...
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>College</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[160px]">Actions</TableHead>
                 </TableRow>
-              ) : hostels && hostels.length > 0 ? (
-                hostels.map((hostel) => (
-                  <TableRow key={hostel.id}>
-                    <TableCell className="font-medium">{hostel.name}</TableCell>
-                    <TableCell>{hostel.colleges.name}</TableCell>
-                    <TableCell>{hostel.type}</TableCell>
-                    <TableCell>{hostel.capacity}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(hostel)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => openDeleteDialog(hostel)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      Loading hostels...
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    No hostels found. Add a hostel to get started.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ) : filteredHostels && filteredHostels.length > 0 ? (
+                  filteredHostels.map((hostel) => (
+                    <TableRow key={hostel.id}>
+                      <TableCell className="font-medium">{hostel.name}</TableCell>
+                      <TableCell>{hostel.colleges.name}</TableCell>
+                      <TableCell>{hostel.type}</TableCell>
+                      <TableCell>
+                        <Badge variant={hostel.status === 'approved' ? 'default' : 'secondary'}>
+                          {hostel.status === 'approved' ? 'Approved' : 'Pending'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {hostel.status === 'pending' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleApprove(hostel)}
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(hostel)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openDeleteDialog(hostel)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      {activeTab === 'pending' 
+                        ? 'No pending hostels found.' 
+                        : activeTab === 'approved'
+                          ? 'No approved hostels found.'
+                          : 'No hostels found. Add a hostel to get started.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </Tabs>
 
       {/* Add Hostel Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
